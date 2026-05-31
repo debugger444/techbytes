@@ -228,10 +228,52 @@ function switchView(view) {
   prevView = currentView;
   currentView = view;
   window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // Sync mobile nav active states
+  ['mNavFeed', 'mNavWrite', 'mNavMyBlogs'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+  const mNavMap = { feed: 'mNavFeed', editor: 'mNavWrite', myblogs: 'mNavMyBlogs' };
+  if (mNavMap[view]) {
+    const el = document.getElementById(mNavMap[view]);
+    if (el) el.classList.add('active');
+  }
 }
 
 function readGoBack() {
   switchView(prevView === 'read' ? 'feed' : prevView);
+}
+
+
+// ═══ MOBILE NAV ═══════════════════════════════════════════════
+function toggleMobileNav() {
+  const nav = document.getElementById('mobileNav');
+  const btn = document.getElementById('hamburgerBtn');
+  if (!nav) return;
+  const isOpen = nav.classList.toggle('open');
+  // Animate hamburger → X
+  const spans = btn?.querySelectorAll('span');
+  if (spans) {
+    if (isOpen) {
+      spans[0].style.cssText = 'transform:rotate(45deg) translate(4px,4px)';
+      spans[1].style.cssText = 'opacity:0;transform:scaleX(0)';
+      spans[2].style.cssText = 'transform:rotate(-45deg) translate(4px,-4px)';
+    } else {
+      spans.forEach(s => s.style.cssText = '');
+    }
+  }
+  // Prevent body scroll when open
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+
+function closeMobileNav() {
+  const nav = document.getElementById('mobileNav');
+  if (!nav) return;
+  nav.classList.remove('open');
+  const btn = document.getElementById('hamburgerBtn');
+  btn?.querySelectorAll('span').forEach(s => s.style.cssText = '');
+  document.body.style.overflow = '';
 }
 
 
@@ -1007,6 +1049,8 @@ function showApp(user) {
   document.getElementById('userPill').style.display = 'flex';
   document.getElementById('signoutBtn').style.display = 'inline-block';
   document.getElementById('navTabs').classList.add('show');
+  const mso = document.getElementById('mNavSignOut');
+  if (mso) mso.style.display = 'block';
   switchView('feed');
 }
 
@@ -1016,6 +1060,9 @@ function showLogin() {
   document.getElementById('signoutBtn').style.display = 'none';
   document.getElementById('navTabs').classList.remove('show');
   document.getElementById('headerPublishBtn').classList.remove('show');
+  const mso = document.getElementById('mNavSignOut');
+  if (mso) mso.style.display = 'none';
+  closeMobileNav();
 }
 
 
@@ -2053,6 +2100,7 @@ export function initApp() {
     startEditUsername, saveUsername, cancelEditUsername,
     loadUsername, loadUsernames,
     toggleWriterSearch, searchWriters,
-    showFollowersList, showFollowingList, closeFollowModal
+    showFollowersList, showFollowingList, closeFollowModal,
+    toggleMobileNav, closeMobileNav
   });
 }

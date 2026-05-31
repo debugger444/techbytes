@@ -23,7 +23,7 @@ export const bodyHTML = `
 <input type="file" id="avatarFileInput" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)">
 
 <header>
-  <div class="logo" onclick="switchView('feed')">Tech<span>Bytes</span></div>
+  <div class="logo" onclick="switchView('feed');closeMobileNav();">Tech<span>Bytes</span></div>
   <div class="nav-tabs" id="navTabs">
     <button class="nav-tab active" id="navFeed" onclick="switchView('feed')">Feed</button>
     <button class="nav-tab" id="navWrite" onclick="switchView('editor')">Write</button>
@@ -38,8 +38,21 @@ export const bodyHTML = `
     </button>
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
     <button class="btn-signout" id="signoutBtn" style="display:none;" onclick="handleSignOut()">Sign out</button>
+    <button class="hamburger" id="hamburgerBtn" onclick="toggleMobileNav()" aria-label="Open navigation">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </header>
+
+<!-- MOBILE NAV OVERLAY -->
+<nav class="mobile-nav" id="mobileNav">
+  <button class="nav-tab active" id="mNavFeed" onclick="switchView('feed');closeMobileNav()">🏠 Feed</button>
+  <button class="nav-tab" id="mNavWrite" onclick="switchView('editor');closeMobileNav()">✍️ Write</button>
+  <button class="nav-tab" id="mNavMyBlogs" onclick="switchView('myblogs');closeMobileNav()">📚 My Blogs</button>
+  <div class="mobile-nav-divider"></div>
+  <button class="nav-tab" onclick="toggleTheme();" style="color:var(--muted);">🌙 Toggle Theme</button>
+  <button class="nav-tab" id="mNavSignOut" style="display:none;color:var(--danger);border-color:rgba(252,92,125,.25);" onclick="handleSignOut();closeMobileNav()">Sign Out</button>
+</nav>
 
 <main>
   <!-- FEED -->
@@ -222,7 +235,7 @@ export const bodyHTML = `
         <div style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;">My <span style="background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Blogs</span></div>
         <div style="color:var(--muted);font-size:.88rem;margin-top:.2rem;" id="myBlogsMeta">Loading…</div>
       </div>
-      <button class="btn btn-primary" onclick="switchView('editor')">Write New</button>
+      <button class="btn btn-primary" onclick="switchView('editor')">✍️ Write New</button>
     </div>
     <div id="myBlogsGrid" class="blog-grid"></div>
   </div>
