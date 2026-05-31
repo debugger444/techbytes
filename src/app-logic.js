@@ -1183,7 +1183,10 @@ function generateLocalCaptions(title, body, category) {
     `${title ? title : 'This'} — a perspective you didn't know you needed.`,
     `In the quiet corners of ${cat.toLowerCase()}, some stories demand to be told.`,
     `What does ${keyword} really mean for the world we live in today?`,
-    `A deep dive into ${subject}: the insights, the lessons, and what comes next.`
+    `A deep dive into ${subject}: the insights, the lessons, and what comes next.`,
+    `Everything you need to know about ${keyword} — and why it matters.`,
+    `The untold side of ${subject} that everyone is talking about.`,
+    `${title ? title : 'This'} — breaking it down, one insight at a time.`
   ];
 }
 
@@ -1203,7 +1206,7 @@ async function suggestCaptions() {
   document.getElementById('loadingState').style.display = 'block';
   document.getElementById('captionChips').innerHTML = '';
 
-  const prompt = `Blog title: ${title}\nCategory: ${category}\nContent: ${body.substring(0, 600)}\nGenerate exactly 4 catchy captions. Return ONLY a JSON array of 4 strings.`;
+  const prompt = `Blog title: ${title}\nCategory: ${category}\nContent: ${body.substring(0, 600)}\nGenerate exactly 7 catchy captions. Return ONLY a JSON array of 7 strings.`;
   let captions = null;
 
   try {
@@ -1232,9 +1235,9 @@ async function suggestCaptions() {
 
   if (!Array.isArray(captions) || captions.length === 0) {
     captions = generateLocalCaptions(title, body, category);
-    showToast('✦', '4 captions ready!');
+    showToast('✦', '7 captions ready!');
   } else {
-    showToast('✦', '4 captions generated!');
+    showToast('✦', '7 captions generated!');
   }
 
   document.getElementById('loadingState').style.display = 'none';
@@ -1260,38 +1263,70 @@ function renderCaptions(captions) {
   });
 }
 
-const CATEGORY_FALLBACKS = {
-  'Technology': ['computer,code,programming', 'laptop,technology,office'],
-  'Travel':     ['travel,landscape,adventure', 'beach,ocean,vacation'],
-  'Lifestyle':  ['lifestyle,minimal,wellness', 'coffee,morning,calm'],
-  'Education':  ['books,library,study', 'university,campus,education'],
-  'Food':       ['food,restaurant,cuisine', 'cooking,kitchen,chef'],
-  'Opinions':   ['people,thinking,discussion', 'newspaper,opinion,media'],
-  'Entertainment': ['concert,music,entertainment', 'cinema,film,entertainment']
-};
+/**
+ * Build multiple search queries from the title, ordered from most specific
+ * to most general. This gives Pexels the best chance of returning a
+ * highly relevant image for the exact title the user typed.
+ */
+function buildTitleSearchQueries(title) {
+  const stop = new Set([
+    'the','a','an','and','or','but','in','on','at','to','for','of','with',
+    'by','from','is','are','was','were','be','been','being','have','has','had',
+    'do','does','did','will','would','could','should','shall','may','might',
+    'can','my','your','our','their','its','this','that','these','those',
+    'how','why','what','when','where','who','which','about','i','we','you',
+    'he','she','it','they','me','him','her','us','them','not','no','very',
+    'just','so','also','too','then','than','more','most','some','any','all',
+    'every','each','much','many','few','own','new','old','good','bad','best',
+    'worst','first','last','next','great','big','small','little','long','top',
+    'high','low','right','left','real','true','full','blog','post','article',
+    'write','writing','read','reading','complete','ultimate','definitive'
+  ]);
+  const abstract = new Set([
+    'experience','taste','feel','feeling','essence','story','guide','review',
+    'thoughts','opinion','perspective','take','look','way','thing','stuff',
+    'idea','tips','tricks','secrets','reasons','ways','steps','everything',
+    'nothing','something','anyone','everyone','nobody','world','life'
+  ]);
 
-function getCategoryFallback(c) {
-  const l = CATEGORY_FALLBACKS[c];
-  if (!l) return 'nature,landscape,beautiful';
-  return l[Math.floor(Math.random() * l.length)];
-}
+  // Clean title — only letters, numbers, spaces
+  const cleaned = title.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
 
-function extractTitleKeywords(title, category) {
-  const stop = new Set(['the','a','an','and','or','but','in','on','at','to','for','of','with','by','from','is','are','was','were','be','been','have','has','had','do','does','did','will','would','could','should','my','your','our','their','this','that','these','those','how','why','what','when','where','who','which','about','i','we','you','he','she','it','they','me','him','her','us','them','not','no','very','just','so']);
-  const abstract = new Set(['experience','taste','feel','feeling','essence','story','guide','review','thoughts','opinion','perspective','take','look','way','thing','stuff','idea']);
-  const words = title.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 2 && !stop.has(w));
-  const concrete = words.filter(w => !abstract.has(w));
-  const visual = concrete.length > 0 ? concrete : words;
-  const catEnrich = {
-    'Technology': 'technology', 'Travel': 'landscape', 'Lifestyle': 'lifestyle',
-    'Education': 'books', 'Food': 'cuisine', 'Opinions': 'discussion', 'Entertainment': 'entertainment'
-  };
-  let kw = visual.slice(0, 3);
-  if (category && catEnrich[category] && kw.length < 3) {
-    kw.push(catEnrich[category]);
+  // Extract meaningful words
+  const allWords = cleaned.split(/\s+/).filter(w => w.length > 2 && !stop.has(w));
+  const concreteWords = allWords.filter(w => !abstract.has(w));
+  const bestWords = concreteWords.length > 0 ? concreteWords : allWords;
+
+  const queries = [];
+
+  // Strategy 1: Full cleaned title (most specific — Pexels is smart with phrases)
+  if (cleaned.length > 0 && cleaned.split(/\s+/).length <= 8) {
+    queries.push(cleaned);
   }
-  if (kw.length === 0) return getCategoryFallback(category);
-  return [...new Set(kw)].slice(0, 4).join(' ');
+
+  // Strategy 2: All concrete keywords joined (e.g. "artificial intelligence future")
+  if (bestWords.length >= 2) {
+    queries.push(bestWords.slice(0, 4).join(' '));
+  }
+
+  // Strategy 3: Top 2 keywords (broader match)
+  if (bestWords.length >= 2) {
+    queries.push(bestWords.slice(0, 2).join(' '));
+  }
+
+  // Strategy 4: Single strongest keyword (broadest, guaranteed results)
+  if (bestWords.length >= 1) {
+    queries.push(bestWords[0]);
+  }
+
+  // Deduplicate while preserving order
+  const seen = new Set();
+  return queries.filter(q => {
+    const key = q.trim().toLowerCase();
+    if (seen.has(key) || !key) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function hashString(s) {
@@ -1303,13 +1338,201 @@ function hashString(s) {
   return Math.abs(h);
 }
 
+/**
+ * Search Pexels with a single query. Returns array of photo URLs or [].
+ */
+async function searchPexels(query, perPage = 15) {
+  if (!PEXELS_API_KEY) return [];
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const resp = await fetch(
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${perPage}&page=1`,
+      { signal: controller.signal, headers: { 'Authorization': PEXELS_API_KEY } }
+    );
+    clearTimeout(timeout);
+    if (!resp.ok) return [];
+    const data = await resp.json();
+    return (data.photos || []).map(p => p.src.landscape || p.src.large2x || p.src.large);
+  } catch (e) {
+    console.warn('Pexels search failed for "' + query + '":', e);
+    return [];
+  }
+}
+
+/**
+ * Search Wikimedia Commons — completely free, no API key, CORS-friendly.
+ * Returns array of image URLs relevant to the query.
+ */
+async function searchWikimedia(query, limit = 15) {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query + ' photo')}&gsrnamespace=6&gsrlimit=${limit}&prop=imageinfo&iiprop=url|mime&iiurlwidth=900&format=json&origin=*`;
+    const resp = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!resp.ok) return [];
+    const data = await resp.json();
+    const pages = data.query?.pages;
+    if (!pages) return [];
+    return Object.values(pages)
+      .filter(p => {
+        const info = p.imageinfo?.[0];
+        if (!info?.thumburl) return false;
+        // Only include actual photos (jpg/png/webp), skip SVGs, PDFs, icons
+        const mime = (info.mime || '').toLowerCase();
+        return mime.startsWith('image/jpeg') || mime.startsWith('image/png') || mime.startsWith('image/webp');
+      })
+      .map(p => p.imageinfo[0].thumburl);
+  } catch (e) {
+    console.warn('Wikimedia search failed for "' + query + '":', e);
+    return [];
+  }
+}
+
+/**
+ * Generate a beautiful canvas-based cover image from the blog title.
+ * This is the ultimate fallback — it ALWAYS works and is ALWAYS relevant
+ * because it literally displays the title on a gorgeous gradient.
+ * Returns a data URL.
+ */
+function generateTitleCover(title) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 900;
+  canvas.height = 500;
+  const ctx = canvas.getContext('2d');
+
+  // Generate unique colors based on title
+  const h = hashString(title);
+  const hue1 = h % 360;
+  const hue2 = (hue1 + 45) % 360;
+  const hue3 = (hue1 + 180) % 360;
+
+  // Beautiful gradient background
+  const grad = ctx.createLinearGradient(0, 0, 900, 500);
+  grad.addColorStop(0, `hsl(${hue1}, 65%, 30%)`);
+  grad.addColorStop(0.5, `hsl(${hue2}, 55%, 22%)`);
+  grad.addColorStop(1, `hsl(${hue3}, 50%, 18%)`);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 900, 500);
+
+  // Subtle decorative circles
+  ctx.globalAlpha = 0.06;
+  for (let i = 0; i < 6; i++) {
+    ctx.beginPath();
+    ctx.arc(
+      ((h * (i + 1) * 137) % 800) + 50,
+      ((h * (i + 1) * 97) % 400) + 50,
+      60 + (i * 35),
+      0, Math.PI * 2
+    );
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+  }
+
+  // Decorative lines
+  ctx.globalAlpha = 0.08;
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 4; i++) {
+    ctx.beginPath();
+    ctx.moveTo(0, 100 + i * 120);
+    ctx.bezierCurveTo(300, 80 + i * 100, 600, 140 + i * 110, 900, 90 + i * 130);
+    ctx.stroke();
+  }
+
+  ctx.globalAlpha = 1;
+
+  // Small accent bar at top
+  const accentGrad = ctx.createLinearGradient(340, 0, 560, 0);
+  accentGrad.addColorStop(0, `hsl(${hue1}, 80%, 60%)`);
+  accentGrad.addColorStop(1, `hsl(${hue2}, 80%, 65%)`);
+  ctx.fillStyle = accentGrad;
+  ctx.beginPath();
+  ctx.roundRect(370, 140, 160, 4, 2);
+  ctx.fill();
+
+  // Title text with word wrap
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 38px "Segoe UI", system-ui, -apple-system, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Shadow for text
+  ctx.shadowColor = 'rgba(0,0,0,0.3)';
+  ctx.shadowBlur = 12;
+  ctx.shadowOffsetY = 4;
+
+  const maxWidth = 720;
+  const words = title.split(' ');
+  const lines = [];
+  let line = '';
+  for (const word of words) {
+    const test = line ? line + ' ' + word : word;
+    if (ctx.measureText(test).width > maxWidth) {
+      if (line) lines.push(line);
+      line = word;
+    } else {
+      line = test;
+    }
+  }
+  if (line) lines.push(line);
+
+  // Limit to 4 lines max
+  if (lines.length > 4) {
+    lines.length = 4;
+    lines[3] = lines[3].slice(0, -3) + '...';
+  }
+
+  const lineHeight = 52;
+  const startY = 250 - ((lines.length - 1) * lineHeight) / 2;
+  lines.forEach((l, i) => {
+    ctx.fillText(l, 450, startY + i * lineHeight);
+  });
+
+  // "TechBytes" branding at bottom
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
+  ctx.font = '16px "Segoe UI", system-ui, sans-serif';
+  ctx.globalAlpha = 0.5;
+  ctx.fillText('✦ TechBytes', 450, startY + lines.length * lineHeight + 45);
+
+  return canvas.toDataURL('image/jpeg', 0.92);
+}
+
+/**
+ * Try searching across multiple image APIs with cascading queries.
+ * Returns { url, matchedQuery, source } or null.
+ */
+async function searchImagesMultiAPI(queries, regenIdx, statusCallback) {
+  // ─── Tier 1: Pexels (best quality & relevance) ───
+  for (const query of queries) {
+    if (statusCallback) statusCallback(`Pexels: "${query}"`);
+    const urls = await searchPexels(query, 15);
+    if (urls.length > 0) {
+      const idx = regenIdx <= 1 ? 0 : ((regenIdx - 1) % urls.length);
+      return { url: urls[idx], matchedQuery: query, source: 'Pexels' };
+    }
+  }
+
+  // ─── Tier 2: Wikimedia Commons (free, no key, large library) ───
+  for (const query of queries) {
+    if (statusCallback) statusCallback(`Wikimedia: "${query}"`);
+    const urls = await searchWikimedia(query);
+    if (urls.length > 0) {
+      const idx = regenIdx <= 1 ? 0 : ((regenIdx - 1) % urls.length);
+      return { url: urls[idx], matchedQuery: query, source: 'Wikimedia' };
+    }
+  }
+
+  return null;
+}
+
 async function generateAIImage() {
   const title = document.getElementById('titleInput').value.trim();
-  const body = document.getElementById('blogBody').value.trim();
-  const category = document.querySelector('.cat-chip.active')?.textContent || '';
 
-  if (!title && !body) {
-    showToast('⚠️', 'Please write something first!');
+  if (!title) {
+    showToast('⚠️', 'Please add a title first — images are generated from the title!');
     return;
   }
 
@@ -1319,61 +1542,63 @@ async function generateAIImage() {
   document.getElementById('loadingState').style.display = 'block';
   document.getElementById('genImageArea').style.display = 'none';
 
-  let keywords = extractTitleKeywords(title, category) || getCategoryFallback(category);
-  lastKeywords = keywords;
   regenCounter++;
 
+  // Build cascading search queries from the title (most specific → broadest)
+  const queries = buildTitleSearchQueries(title);
+
+  // Try Pexels → Wikimedia with status updates on the button
+  const result = await searchImagesMultiAPI(queries, regenCounter, (status) => {
+    btn.textContent = `⏳ ${status}`;
+  });
+
   let imgUrl = null;
+  let matchedQuery = '';
+  let isCanvasCover = false;
 
-  // Primary: Pexels API
-  if (PEXELS_API_KEY) {
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 8000);
-      const searchQuery = encodeURIComponent(keywords);
-      const page = ((regenCounter - 1) % 5) + 1;
-      const resp = await fetch(
-        `https://api.pexels.com/v1/search?query=${searchQuery}&per_page=5&page=${page}`,
-        { signal: controller.signal, headers: { 'Authorization': PEXELS_API_KEY } }
-      );
-      clearTimeout(timeout);
-
-      if (resp.ok) {
-        const data = await resp.json();
-        if (data.photos && data.photos.length > 0) {
-          const idx = (hashString(title || keywords) + regenCounter) % data.photos.length;
-          imgUrl = data.photos[idx].src.landscape || data.photos[idx].src.large;
-        }
-      }
-    } catch (e) {
-      console.warn('Pexels failed, using fallback:', e);
-    }
+  if (result) {
+    imgUrl = result.url;
+    matchedQuery = result.matchedQuery;
+  } else {
+    // ─── Tier 3: Canvas-generated title cover (ALWAYS works, ALWAYS relevant) ───
+    btn.textContent = '🎨 Generating cover…';
+    imgUrl = generateTitleCover(title);
+    matchedQuery = title;
+    isCanvasCover = true;
   }
 
-  // Fallback: loremflickr
-  if (!imgUrl) {
-    const lock = (hashString(title || keywords) + regenCounter) % 100000;
-    imgUrl = `https://loremflickr.com/900/500/${encodeURIComponent(keywords.replace(/\s+/g, ','))}/all?lock=${lock}`;
-  }
-
+  lastKeywords = matchedQuery || title;
   aiImageUrl = imgUrl;
-  // Upload image to Supabase Storage for permanent storage
-try {
-  const response = await fetch(imgUrl);
-  const blob = await response.blob();
-  const fileName = `ai-${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
-  const { data, error } = await _supabase.storage
-    .from('post-images')
-    .upload(fileName, blob, { contentType: 'image/jpeg' });
-  if (!error) {
-    const { data: urlData } = _supabase.storage
+
+  // Upload to Supabase Storage (works for both URLs and data URLs)
+  try {
+    let blob;
+    if (isCanvasCover) {
+      // Convert data URL to blob
+      const parts = imgUrl.split(',');
+      const mime = parts[0].match(/:(.*?);/)[1];
+      const bstr = atob(parts[1]);
+      const arr = new Uint8Array(bstr.length);
+      for (let i = 0; i < bstr.length; i++) arr[i] = bstr.charCodeAt(i);
+      blob = new Blob([arr], { type: mime });
+    } else {
+      const response = await fetch(imgUrl);
+      blob = await response.blob();
+    }
+    const fileName = `ai-${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+    const { data, error } = await _supabase.storage
       .from('post-images')
-      .getPublicUrl(fileName);
-    aiImageUrl = urlData.publicUrl;
+      .upload(fileName, blob, { contentType: 'image/jpeg' });
+    if (!error) {
+      const { data: urlData } = _supabase.storage
+        .from('post-images')
+        .getPublicUrl(fileName);
+      aiImageUrl = urlData.publicUrl;
+    }
+  } catch (e) {
+    console.warn('Could not upload to storage, using direct URL:', e);
   }
-} catch (e) {
-  console.warn('Could not upload to storage, using direct URL:', e);
-}
+
   const imgEl = document.getElementById('aiGenImg');
   imgEl.style.opacity = '0';
   imgEl.style.transition = 'opacity .4s ease';
@@ -1381,23 +1606,36 @@ try {
   imgEl.onload = () => {
     document.getElementById('loadingState').style.display = 'none';
     document.getElementById('genImageArea').style.display = 'block';
-    document.getElementById('keywordBadge').textContent = '🔍 ' + keywords;
+    document.getElementById('keywordBadge').textContent = isCanvasCover
+      ? '🎨 Title cover: "' + matchedQuery + '"'
+      : '🔍 Matched: "' + matchedQuery + '"';
     useAIImage = true;
     document.getElementById('aiImgToggle').classList.add('active');
     imgEl.style.opacity = '1';
-    showToast('🎨', `Matched: ${keywords}`);
+    showToast('🎨', isCanvasCover
+      ? 'Cover generated from title!'
+      : `Image matched: "${matchedQuery}"`);
   };
 
   imgEl.onerror = () => {
-    const seed = keywords.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 1000;
-    aiImageUrl = `https://picsum.photos/seed/${seed + regenCounter}/900/500`;
-    imgEl.src = aiImageUrl;
-    document.getElementById('loadingState').style.display = 'none';
-    document.getElementById('genImageArea').style.display = 'block';
-    document.getElementById('keywordBadge').textContent = '🎲 Random image';
-    useAIImage = true;
-    imgEl.style.opacity = '1';
-    showToast('🖼️', 'Image loaded (fallback)');
+    // If URL-based image fails to load, generate canvas cover as rescue
+    if (!isCanvasCover) {
+      const coverUrl = generateTitleCover(title);
+      aiImageUrl = coverUrl;
+      imgEl.onload = () => {
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('genImageArea').style.display = 'block';
+        document.getElementById('keywordBadge').textContent = '🎨 Title cover: "' + title + '"';
+        useAIImage = true;
+        document.getElementById('aiImgToggle').classList.add('active');
+        imgEl.style.opacity = '1';
+        showToast('🎨', 'Cover generated from title!');
+      };
+      imgEl.src = coverUrl;
+    } else {
+      document.getElementById('loadingState').style.display = 'none';
+      showToast('⚠️', 'Could not generate image. Please try again!');
+    }
   };
 
   imgEl.src = imgUrl;
@@ -1807,8 +2045,9 @@ export function initApp() {
     setAuthLoading, handleLogin, handleSignUp, handleSignOut, showApp, showLogin,
     publishPost, setPublishLoading, showPublishStatus, loadPostsCount, toggleCat,
     handleImageUpload, removeImage, toggleAIImage, generateLocalCaptions,
-    suggestCaptions, renderCaptions, getCategoryFallback, extractTitleKeywords,
-    hashString, generateAIImage, showPreview, resetForm, showToast,
+    suggestCaptions, renderCaptions, buildTitleSearchQueries,
+    hashString, searchPexels, searchWikimedia, generateTitleCover, searchImagesMultiAPI,
+    generateAIImage, showPreview, resetForm, showToast,
     initVoiceTyping, toggleVoice, startVoice, stopVoice,
     continueWithoutAccount, showGuestToast, showLoginFromToast,
     startEditUsername, saveUsername, cancelEditUsername,
