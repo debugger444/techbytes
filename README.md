@@ -3,7 +3,7 @@
 A full-stack AI-powered blogging platform where users can read, write, and share blogs across multiple categories.
 
 ## 🔗 Live Demo
-[https://sarvesh0415.github.io/techbytes/](https://sarvesh0415.github.io/techbytes/)
+[https://techbytes-one.vercel.app/](https://techbytes-one.vercel.app/)
 
 ## ✨ Features
 

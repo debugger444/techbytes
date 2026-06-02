@@ -18,7 +18,9 @@ let allFeedPosts = [],
     currentReadPost = null;
 
 let followingSet = new Set(),
-    likedPosts = new Set();
+    likedPosts = new Set(),
+    bookmarkedPosts = new Set(),
+    showAnalyticsActive = false;
 
 let userAvatarUrl = null; // base64 avatar stored in localStorage
 let regenCounter = 0;     // increments on "New Image" click for different results
@@ -195,17 +197,30 @@ function getAvatarImgTag(userId, email, size) {
 // ═══ VIEW SWITCHING ═══════════════════════════════════════════
 function switchView(view) {
   // Hide all views
-  ['feedView', 'editorView', 'myblogsView', 'readView'].forEach(id => {
-    document.getElementById(id).style.display = 'none';
+  ['feedView', 'editorView', 'myblogsView', 'bookmarksView', 'readView'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
   });
 
   // Remove active class from all nav tabs
-  ['navFeed', 'navWrite', 'navMyBlogs'].forEach(id => {
+  ['navFeed', 'navWrite', 'navMyBlogs', 'navBookmarks'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.remove('active');
   });
 
   document.getElementById('headerPublishBtn').classList.remove('show');
+
+  // Handle reading progress bar
+  const bar = document.getElementById('readProgressBar');
+  if (bar) {
+    if (view === 'read') {
+      bar.style.display = 'block';
+      bar.style.width = '0%';
+    } else {
+      bar.style.display = 'none';
+      bar.style.width = '0%';
+    }
+  }
 
   // Show the requested view
   if (view === 'feed') {
@@ -221,6 +236,10 @@ function switchView(view) {
     document.getElementById('myblogsView').style.display = 'block';
     document.getElementById('navMyBlogs').classList.add('active');
     loadMyBlogs();
+  } else if (view === 'bookmarks') {
+    document.getElementById('bookmarksView').style.display = 'block';
+    document.getElementById('navBookmarks').classList.add('active');
+    loadBookmarksView();
   } else if (view === 'read') {
     document.getElementById('readView').style.display = 'block';
   }
@@ -230,11 +249,11 @@ function switchView(view) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
   // Sync mobile nav active states
-  ['mNavFeed', 'mNavWrite', 'mNavMyBlogs'].forEach(id => {
+  ['mNavFeed', 'mNavWrite', 'mNavMyBlogs', 'mNavBookmarks'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.remove('active');
   });
-  const mNavMap = { feed: 'mNavFeed', editor: 'mNavWrite', myblogs: 'mNavMyBlogs' };
+  const mNavMap = { feed: 'mNavFeed', editor: 'mNavWrite', myblogs: 'mNavMyBlogs', bookmarks: 'mNavBookmarks' };
   if (mNavMap[view]) {
     const el = document.getElementById(mNavMap[view]);
     if (el) el.classList.add('active');
@@ -459,6 +478,11 @@ function filterPosts() {
 async function loadMyBlogs() {
   if (!currentUser) return;
 
+  if (showAnalyticsActive) {
+    loadAnalytics();
+    return;
+  }
+
   const grid = document.getElementById('myBlogsGrid');
   grid.innerHTML = '';
 
@@ -526,6 +550,8 @@ function buildCard(post, mode) {
   const avatarHtml = getAvatarImgTag(post.user_id, post.author_email, 22);
   const isLiked = likedPosts.has(post.id);
 
+  const isBookmarked = bookmarkedPosts.has(post.id);
+
   card.innerHTML = `
     ${post.image_url
       ? `<img class="blog-card-img" src="${post.image_url}" alt="${post.title || ''}" onerror="this.style.display='none'">`
@@ -552,11 +578,15 @@ function buildCard(post, mode) {
         </div>
       </div>
     </div>
-    <div class="like-row">
+    <div class="like-row" style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
       <button class="like-btn ${isLiked ? 'liked' : ''}" onclick="quickLike('${post.id}',this)">
         ❤️ <span class="like-num">${post.claps || 0}</span>
       </button>
-      <span style="font-size:.72rem;color:var(--muted);">${date}</span>
+      <button class="bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" data-id="${post.id}" onclick="toggleBookmark('${post.id}',this)" title="Bookmark post">
+        🔖
+      </button>
+      <span class="view-badge">👁️ <span class="view-num">${post.views || 0}</span></span>
+      <span style="font-size:.72rem;color:var(--muted);margin-left:auto;">${date}</span>
     </div>`;
 
   return card;
@@ -583,7 +613,7 @@ async function quickLike(postId, btn) {
   try {
     const { data } = await _supabase
       .from('posts')
-      .select('claps')
+      .select('claps, user_id, title')
       .eq('id', postId)
       .single();
 
@@ -597,6 +627,11 @@ async function quickLike(postId, btn) {
 
     const idx = allFeedPosts.findIndex(p => p.id === postId);
     if (idx > -1) allFeedPosts[idx].claps = newVal;
+
+    // Trigger Notification
+    if (!wasLiked && data && data.user_id !== currentUser.id) {
+      await createNotification(data.user_id, 'like', postId, data.title);
+    }
   } catch (e) {}
 }
 
@@ -673,10 +708,13 @@ function openRead(post) {
   }
 
   document.getElementById('readAuthorName').textContent = getDisplayName(post.user_id, post.author_email || '');
+  
+  // Set Views + Time Meta
+  const viewsCount = post.views || 0;
   document.getElementById('readAuthorMeta').textContent =
     new Date(post.created_at).toLocaleDateString('en-US', {
       year: 'numeric', month: 'long', day: 'numeric'
-    }) + ' · ' + calcReadTime(post.body);
+    }) + ' · ' + calcReadTime(post.body) + ' · 👁️ ' + viewsCount + ' views';
 
   document.getElementById('readSlug').textContent =
     '🔗 techbytes.com/blog/' + (post.slug || generateSlug(post.title || ''));
@@ -697,6 +735,24 @@ function openRead(post) {
   bigBtn.className = 'big-like-btn' + (liked ? ' liked' : '');
   document.getElementById('bigLikeCount').textContent = post.claps || 0;
   document.getElementById('likeMsg').textContent = liked ? 'You liked this!' : 'Like this post!';
+
+  // Bookmarks status in Read View
+  const bookmarkBtn = document.getElementById('readBookmarkBtn');
+  if (bookmarkBtn) {
+    bookmarkBtn.setAttribute('data-id', post.id);
+    const hasBookmarked = bookmarkedPosts.has(post.id);
+    bookmarkBtn.classList.toggle('bookmarked', hasBookmarked);
+    bookmarkBtn.innerHTML = hasBookmarked ? '🔖 Bookmarked' : '🔖 Bookmark';
+  }
+
+  // Comments Visibility & loading
+  const isLoggedIn = currentUser && !guestMode;
+  document.getElementById('commentInputArea').style.display = isLoggedIn ? 'block' : 'none';
+  document.getElementById('guestCommentPrompt').style.display = isLoggedIn ? 'none' : 'block';
+  loadComments(post.id);
+
+  // Increment views
+  incrementView(post.id);
 }
 
 async function handleReadLike() {
@@ -722,7 +778,7 @@ async function handleReadLike() {
   try {
     const { data } = await _supabase
       .from('posts')
-      .select('claps')
+      .select('claps, user_id, title')
       .eq('id', currentReadPost.id)
       .single();
 
@@ -732,6 +788,11 @@ async function handleReadLike() {
     await _supabase.from('posts').update({ claps: newVal }).eq('id', currentReadPost.id);
     document.getElementById('bigLikeCount').textContent = newVal;
     currentReadPost.claps = newVal;
+
+    // Trigger Notification
+    if (!wasLiked && data && data.user_id !== currentUser.id) {
+      await createNotification(data.user_id, 'like', currentReadPost.id, data.title);
+    }
   } catch (e) {}
 }
 
@@ -787,6 +848,9 @@ async function loadSidebar() {
   // Preload usernames for feed posts
   const feedUserIds = allFeedPosts.map(p => p.user_id).filter(Boolean);
   await loadUsernames([...new Set(feedUserIds)]);
+
+  // Render achievement badges
+  renderBadges();
 
   // Trending tags
   try {
@@ -1016,6 +1080,15 @@ function continueWithoutAccount() {
   document.getElementById('signoutBtn').style.display = 'none';
   document.getElementById('navTabs').classList.add('show');
   document.getElementById('headerPublishBtn').classList.remove('show');
+  
+  // Hide notifications wrap for guest mode
+  const nw = document.getElementById('notifWrap');
+  if (nw) nw.style.display = 'none';
+  if (window._notifInterval) {
+    clearInterval(window._notifInterval);
+    window._notifInterval = null;
+  }
+
   switchView('feed');
 }
 
@@ -1051,6 +1124,18 @@ function showApp(user) {
   document.getElementById('navTabs').classList.add('show');
   const mso = document.getElementById('mNavSignOut');
   if (mso) mso.style.display = 'block';
+
+  // Load Bookmarks and Notifications
+  loadBookmarks();
+  const nw = document.getElementById('notifWrap');
+  if (nw) {
+    nw.style.display = 'block';
+    loadNotifications();
+    if (!window._notifInterval) {
+      window._notifInterval = setInterval(loadNotifications, 30000);
+    }
+  }
+
   switchView('feed');
 }
 
@@ -1062,6 +1147,15 @@ function showLogin() {
   document.getElementById('headerPublishBtn').classList.remove('show');
   const mso = document.getElementById('mNavSignOut');
   if (mso) mso.style.display = 'none';
+
+  // Clean up notifications poller
+  const nw = document.getElementById('notifWrap');
+  if (nw) nw.style.display = 'none';
+  if (window._notifInterval) {
+    clearInterval(window._notifInterval);
+    window._notifInterval = null;
+  }
+
   closeMobileNav();
 }
 
@@ -2017,6 +2111,672 @@ function closeFollowModal() {
 }
 
 
+// ═══ READ PROGRESS BAR SCROLL LISTENER ═══════════════════════
+window.addEventListener('scroll', () => {
+  const bar = document.getElementById('readProgressBar');
+  if (!bar || currentView !== 'read') return;
+  const h = document.documentElement,
+        b = document.body,
+        st = 'scrollTop',
+        sh = 'scrollHeight';
+  const percent = (h[st] || b[st]) / ((h[sh] || b[sh]) - h.clientHeight) * 100;
+  bar.style.width = percent + '%';
+});
+
+
+// ═══ VIEW COUNTER ═════════════════════════════════════════════
+async function incrementView(postId) {
+  if (!postId) return;
+  const viewed = sessionStorage.getItem('tb_viewed_' + postId);
+  if (!viewed) {
+    sessionStorage.setItem('tb_viewed_' + postId, 'true');
+    try {
+      const { data } = await _supabase.from('posts').select('views').eq('id', postId).maybeSingle();
+      const cur = data?.views || 0;
+      await _supabase.from('posts').update({ views: cur + 1 }).eq('id', postId);
+      if (currentReadPost && currentReadPost.id === postId) {
+        currentReadPost.views = cur + 1;
+      }
+    } catch (e) {
+      console.warn('Could not increment view count:', e);
+    }
+  }
+}
+
+
+// ═══ BOOKMARKS / READING LIST ════════════════════════════════
+async function loadBookmarks() {
+  if (guestMode || !currentUser) return;
+  try {
+    const { data, error } = await _supabase
+      .from('bookmarks')
+      .select('post_id')
+      .eq('user_id', currentUser.id);
+    if (error) throw error;
+    bookmarkedPosts.clear();
+    (data || []).forEach(r => bookmarkedPosts.add(r.post_id));
+  } catch (e) {
+    console.warn('Could not load bookmarks:', e);
+  }
+}
+
+async function toggleBookmark(postId, btn) {
+  if (guestMode || !currentUser) {
+    showGuestToast();
+    return;
+  }
+  if (!postId) return;
+  const isBookmarked = bookmarkedPosts.has(postId);
+  
+  if (isBookmarked) {
+    bookmarkedPosts.delete(postId);
+    showToast('🔖', 'Bookmark removed.');
+  } else {
+    bookmarkedPosts.add(postId);
+    showToast('🔖', 'Post bookmarked!');
+  }
+
+  // Update visual status across all occurrences
+  document.querySelectorAll(`.bookmark-btn[data-id="${postId}"]`).forEach(el => {
+    const active = el.classList.toggle('bookmarked', !isBookmarked);
+    if (el.id === 'readBookmarkBtn') {
+      el.innerHTML = active ? '🔖 Bookmarked' : '🔖 Bookmark';
+    }
+  });
+
+  try {
+    if (isBookmarked) {
+      await _supabase.from('bookmarks').delete().eq('user_id', currentUser.id).eq('post_id', postId);
+    } else {
+      await _supabase.from('bookmarks').insert([{ user_id: currentUser.id, post_id: postId }]);
+      
+      // Notify post author
+      const { data: postData } = await _supabase.from('posts').select('title, user_id').eq('id', postId).maybeSingle();
+      if (postData && postData.user_id !== currentUser.id) {
+        await createNotification(postData.user_id, 'bookmark', postId, postData.title);
+      }
+    }
+    
+    if (currentView === 'bookmarks') {
+      loadBookmarksView();
+    }
+  } catch (e) {
+    // Revert state on error
+    if (isBookmarked) {
+      bookmarkedPosts.add(postId);
+    } else {
+      bookmarkedPosts.delete(postId);
+    }
+    document.querySelectorAll(`.bookmark-btn[data-id="${postId}"]`).forEach(el => {
+      const active = el.classList.toggle('bookmarked', isBookmarked);
+      if (el.id === 'readBookmarkBtn') {
+        el.innerHTML = active ? '🔖 Bookmarked' : '🔖 Bookmark';
+      }
+    });
+    showToast('⚠️', 'Error syncing bookmark.');
+  }
+}
+
+async function loadBookmarksView() {
+  if (guestMode || !currentUser) {
+    showGuestToast();
+    return;
+  }
+  const grid = document.getElementById('bookmarksGrid');
+  grid.innerHTML = '<div style="color:var(--muted);font-size:.85rem;padding:1.5rem 0;">Loading bookmarks…</div>';
+
+  try {
+    const { data: bData, error: bErr } = await _supabase
+      .from('bookmarks')
+      .select('post_id')
+      .eq('user_id', currentUser.id);
+
+    if (bErr) throw bErr;
+    const ids = (bData || []).map(r => r.post_id);
+
+    if (!ids.length) {
+      document.getElementById('bookmarksMeta').textContent = '0 saved posts';
+      grid.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">🔖</div>
+          <div class="empty-state-title">No bookmarks saved</div>
+          <div class="empty-state-sub">Browse the feed and save articles for later reading!</div>
+          <button class="btn btn-primary" onclick="switchView('feed')">Explore Feed</button>
+        </div>`;
+      return;
+    }
+
+    const { data: posts, error: pErr } = await _supabase
+      .from('posts')
+      .select('*')
+      .in('id', ids)
+      .eq('is_draft', false);
+
+    if (pErr) throw pErr;
+
+    grid.innerHTML = '';
+    document.getElementById('bookmarksMeta').textContent = `${posts.length} saved post${posts.length !== 1 ? 's' : ''}`;
+    posts.forEach(post => {
+      grid.appendChild(buildCard(post, 'feed'));
+    });
+  } catch (e) {
+    grid.innerHTML = `<div style="color:var(--danger);font-size:.85rem;padding:1.5rem 0;">Failed to load bookmarks: ${e.message}</div>`;
+  }
+}
+
+
+// ═══ COMMENTS ON POSTS ═══════════════════════════════════════
+async function loadComments(postId) {
+  const container = document.getElementById('commentsList');
+  const countEl = document.getElementById('commentsCount');
+  if (!container || !countEl) return;
+
+  container.innerHTML = '<div style="color:var(--muted);font-size:.85rem;padding:1rem 0;">Loading comments…</div>';
+  countEl.textContent = '0';
+
+  try {
+    const { data, error } = await _supabase
+      .from('comments')
+      .select('*')
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+
+    countEl.textContent = data.length.toString();
+    container.innerHTML = '';
+
+    if (!data.length) {
+      container.innerHTML = `<div style="font-size:.85rem;color:var(--muted);padding:1rem 0;">No comments yet. Be the first to share your thoughts!</div>`;
+      return;
+    }
+
+    // Load custom usernames
+    const userIds = data.map(c => c.user_id).filter(Boolean);
+    await loadUsernames([...new Set(userIds)]);
+
+    data.forEach(c => {
+      const name = getDisplayName(c.user_id, c.author_email || '');
+      const initial = getInitial(name);
+      const color = avatarColor(c.user_id || c.author_email || '');
+      const isMyComment = currentUser && c.user_id === currentUser.id;
+      const dateStr = new Date(c.created_at).toLocaleDateString('en-US', {
+        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+      const savedAv = localStorage.getItem('tb_avatar_' + c.user_id);
+
+      const item = document.createElement('div');
+      item.className = 'comment-item';
+      item.innerHTML = `
+        <div class="comment-avatar" style="background:${color}">
+          ${savedAv ? `<img src="${savedAv}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : `<span>${initial}</span>`}
+        </div>
+        <div class="comment-content">
+          <div class="comment-header">
+            <span class="comment-author">${name}</span>
+            <span class="comment-date">${dateStr}</span>
+            ${isMyComment ? `<button class="comment-del-btn" onclick="deleteComment('${c.id}')">Delete</button>` : ''}
+          </div>
+          <div class="comment-body">${c.body}</div>
+        </div>
+      `;
+      container.appendChild(item);
+    });
+  } catch (e) {
+    container.innerHTML = `<div style="color:var(--danger);font-size:.85rem;padding:1rem 0;">Failed to load comments.</div>`;
+  }
+}
+
+async function submitComment() {
+  if (guestMode || !currentUser) {
+    showGuestToast();
+    return;
+  }
+  if (!currentReadPost) return;
+  const input = document.getElementById('commentBody');
+  const body = input.value.trim();
+  if (!body) {
+    showToast('⚠️', 'Comment cannot be empty!');
+    return;
+  }
+
+  try {
+    const { error } = await _supabase.from('comments').insert([{
+      post_id: currentReadPost.id,
+      user_id: currentUser.id,
+      author_email: currentUser.email,
+      body
+    }]);
+
+    if (error) throw error;
+    input.value = '';
+    showToast('✓', 'Comment posted!');
+    loadComments(currentReadPost.id);
+
+    // Notify post author
+    if (currentReadPost.user_id !== currentUser.id) {
+      await createNotification(
+        currentReadPost.user_id,
+        'comment',
+        currentReadPost.id,
+        currentReadPost.title
+      );
+    }
+  } catch (e) {
+    showToast('⚠️', 'Could not post comment.');
+  }
+}
+
+async function deleteComment(commentId) {
+  if (!confirm('Are you sure you want to delete your comment?')) return;
+  try {
+    const { error } = await _supabase
+      .from('comments')
+      .delete()
+      .eq('id', commentId)
+      .eq('user_id', currentUser.id);
+
+    if (error) throw error;
+    showToast('✓', 'Comment deleted!');
+    if (currentReadPost) loadComments(currentReadPost.id);
+  } catch (e) {
+    showToast('⚠️', 'Failed to delete comment.');
+  }
+}
+
+
+// ═══ NOTIFICATIONS SYSTEM ════════════════════════════════════
+async function createNotification(recipientId, type, postId, postTitle) {
+  if (!recipientId || !currentUser || recipientId === currentUser.id) return;
+  try {
+    await _supabase.from('notifications').insert([{
+      recipient_id: recipientId,
+      actor_id: currentUser.id,
+      actor_email: currentUser.email,
+      type,
+      post_id: postId,
+      post_title: postTitle,
+      read: false
+    }]);
+  } catch (e) {
+    console.warn('Could not create notification:', e);
+  }
+}
+
+async function loadNotifications() {
+  if (guestMode || !currentUser) return;
+  try {
+    const { data, error } = await _supabase
+      .from('notifications')
+      .select('*')
+      .eq('recipient_id', currentUser.id)
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    if (error) throw error;
+
+    renderNotifications(data || []);
+  } catch (e) {
+    console.warn('Could not load notifications:', e);
+  }
+}
+
+function renderNotifications(notifs) {
+  const list = document.getElementById('notifList');
+  const badge = document.getElementById('notifBadge');
+  if (!list || !badge) return;
+
+  const unreadCount = notifs.filter(n => !n.read).length;
+  badge.textContent = unreadCount;
+  badge.style.display = unreadCount > 0 ? 'flex' : 'none';
+
+  list.innerHTML = '';
+  if (!notifs.length) {
+    list.innerHTML = `<div style="padding:1.5rem;text-align:center;color:var(--muted);font-size:.85rem;">No notifications yet.</div>`;
+    return;
+  }
+
+  notifs.forEach(n => {
+    const dateStr = new Date(n.created_at).toLocaleDateString('en-US', {
+      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+    const actorName = getDisplayName(n.actor_id, n.actor_email);
+    let text = '';
+    let icon = '';
+
+    if (n.type === 'like') {
+      icon = '❤️';
+      text = `<strong>${actorName}</strong> liked your post "${n.post_title || 'Untitled'}"`;
+    } else if (n.type === 'comment') {
+      icon = '💬';
+      text = `<strong>${actorName}</strong> commented on "${n.post_title || 'Untitled'}"`;
+    } else if (n.type === 'follow') {
+      icon = '👤';
+      text = `<strong>${actorName}</strong> started following you`;
+    } else if (n.type === 'bookmark') {
+      icon = '🔖';
+      text = `<strong>${actorName}</strong> bookmarked "${n.post_title || 'Untitled'}"`;
+    }
+
+    const item = document.createElement('div');
+    item.className = 'notif-item' + (n.read ? ' read' : ' unread');
+    item.onclick = async (e) => {
+      e.stopPropagation();
+      if (!n.read) {
+        await _supabase.from('notifications').update({ read: true }).eq('id', n.id);
+        loadNotifications();
+      }
+      if (n.post_id) {
+        try {
+          const { data } = await _supabase.from('posts').select('*').eq('id', n.post_id).maybeSingle();
+          if (data) {
+            document.getElementById('notifPanel').style.display = 'none';
+            openRead(data);
+          }
+        } catch (e) {}
+      }
+    };
+
+    item.innerHTML = `
+      <div class="notif-icon">${icon}</div>
+      <div class="notif-content">
+        <div class="notif-text">${text}</div>
+        <div class="notif-date">${dateStr}</div>
+      </div>
+    `;
+    list.appendChild(item);
+  });
+}
+
+async function markAllRead() {
+  if (!currentUser) return;
+  try {
+    await _supabase.from('notifications').update({ read: true }).eq('recipient_id', currentUser.id);
+    showToast('✓', 'All notifications marked as read.');
+    loadNotifications();
+  } catch (e) {}
+}
+
+function toggleNotifPanel() {
+  const panel = document.getElementById('notifPanel');
+  if (!panel) return;
+  if (panel.style.display === 'none') {
+    panel.style.display = 'block';
+    loadNotifications();
+  } else {
+    panel.style.display = 'none';
+  }
+}
+
+// Close notifications dropdown if clicking outside
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('notifWrap');
+  const panel = document.getElementById('notifPanel');
+  if (wrap && panel && !wrap.contains(e.target)) {
+    panel.style.display = 'none';
+  }
+});
+
+
+// ═══ ACHIEVEMENT BADGES ══════════════════════════════════════
+function computeBadges(postsCount, totalLikes, followersCount, bookmarksCount) {
+  const badges = [];
+
+  if (postsCount >= 1) {
+    badges.push({ icon: '🎉', name: 'First Post', desc: 'Published your first post!' });
+  }
+  if (postsCount >= 5) {
+    badges.push({ icon: '✍️', name: 'Prolific Writer', desc: 'Published 5 or more posts!' });
+  }
+  if (totalLikes >= 1) {
+    badges.push({ icon: '❤️', name: 'Liked!', desc: 'Received your first like!' });
+  }
+  if (totalLikes >= 10) {
+    badges.push({ icon: '🔥', name: 'Popular', desc: 'Received 10 or more total claps!' });
+  }
+  if (followersCount >= 1) {
+    badges.push({ icon: '⭐', name: 'Rising Star', desc: 'Gained your first follower!' });
+  }
+  if (followersCount >= 5) {
+    badges.push({ icon: '👑', name: 'Influencer', desc: 'Gained 5 or more followers!' });
+  }
+  if (bookmarksCount >= 1) {
+    badges.push({ icon: '📚', name: 'Bookmarked!', desc: 'Had your posts saved by others!' });
+  }
+
+  return badges;
+}
+
+async function renderBadges() {
+  if (!currentUser) return;
+  const row = document.getElementById('badgeRow');
+  if (!row) return;
+
+  try {
+    // 1. Get posts count
+    const { count: pc } = await _supabase
+      .from('posts')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', currentUser.id)
+      .eq('is_draft', false);
+    const postsCount = pc || 0;
+
+    // 2. Get total claps (likes) on user's posts
+    const { data: clapsData } = await _supabase
+      .from('posts')
+      .select('claps')
+      .eq('user_id', currentUser.id)
+      .eq('is_draft', false);
+    const totalLikes = (clapsData || []).reduce((s, p) => s + (p.claps || 0), 0);
+
+    // 3. Get followers count
+    const { count: fc } = await _supabase
+      .from('follows')
+      .select('id', { count: 'exact', head: true })
+      .eq('following_id', currentUser.id);
+    const followersCount = fc || 0;
+
+    // 4. Get bookmarks count (how many times others have bookmarked this user's posts)
+    const { data: postsData } = await _supabase
+      .from('posts')
+      .select('id')
+      .eq('user_id', currentUser.id);
+    const userPostIds = (postsData || []).map(p => p.id);
+    let bookmarksCount = 0;
+    if (userPostIds.length > 0) {
+      const { count: bc } = await _supabase
+        .from('bookmarks')
+        .select('id', { count: 'exact', head: true })
+        .in('post_id', userPostIds);
+      bookmarksCount = bc || 0;
+    }
+
+    const earned = computeBadges(postsCount, totalLikes, followersCount, bookmarksCount);
+
+    row.innerHTML = '';
+    if (!earned.length) {
+      row.innerHTML = `<div style="font-size:.78rem;color:var(--muted);padding-top:.25rem;">No badges earned yet. Keep active!</div>`;
+      return;
+    }
+
+    earned.forEach(b => {
+      const pill = document.createElement('div');
+      pill.className = 'badge-pill';
+      pill.title = `${b.name}: ${b.desc}`;
+      pill.innerHTML = `<span class="badge-icon">${b.icon}</span><span class="badge-name">${b.name}</span>`;
+      row.appendChild(pill);
+    });
+  } catch (e) {
+    console.warn('Could not load badges:', e);
+  }
+}
+
+
+// ═══ AUTHOR ANALYTICS ════════════════════════════════════════
+function toggleAnalyticsView() {
+  showAnalyticsActive = !showAnalyticsActive;
+  const grid = document.getElementById('myBlogsGrid');
+  const analytics = document.getElementById('myBlogsAnalytics');
+  const btn = document.getElementById('toggleAnalyticsBtn');
+
+  if (showAnalyticsActive) {
+    if (grid) grid.style.display = 'none';
+    if (analytics) analytics.style.display = 'block';
+    if (btn) {
+      btn.textContent = '📚 Show Blogs';
+      btn.classList.add('active');
+    }
+    loadAnalytics();
+  } else {
+    if (grid) grid.style.display = 'grid';
+    if (analytics) analytics.style.display = 'none';
+    if (btn) {
+      btn.textContent = '📈 Analytics';
+      btn.classList.remove('active');
+    }
+  }
+}
+
+async function loadAnalytics() {
+  if (!currentUser) return;
+  try {
+    const { data, error } = await _supabase
+      .from('posts')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .eq('is_draft', false);
+
+    if (error) throw error;
+
+    if (!data || !data.length) {
+      document.getElementById('analyticsTotalViews').textContent = '0';
+      document.getElementById('analyticsTotalLikes').textContent = '0';
+      document.getElementById('analyticsAvgReadTime').textContent = '0 min';
+      document.getElementById('analyticsTopViewsList').innerHTML = '<div style="color:var(--muted);font-size:.85rem;padding:1rem;">Publish blogs to see analytics.</div>';
+      document.getElementById('analyticsCategoriesList').innerHTML = '<div style="color:var(--muted);font-size:.85rem;padding:1rem;">Publish blogs to see analytics.</div>';
+      return;
+    }
+
+    // Calculations
+    const totalViews = data.reduce((s, p) => s + (p.views || 0), 0);
+    const totalLikes = data.reduce((s, p) => s + (p.claps || 0), 0);
+
+    // Average read time
+    let totalWords = 0;
+    data.forEach(p => {
+      totalWords += p.body ? p.body.trim().split(/\s+/).length : 0;
+    });
+    const avgReadTime = data.length > 0 ? Math.max(1, Math.round((totalWords / data.length) / 200)) : 0;
+
+    document.getElementById('analyticsTotalViews').textContent = totalViews.toLocaleString();
+    document.getElementById('analyticsTotalLikes').textContent = totalLikes.toLocaleString();
+    document.getElementById('analyticsAvgReadTime').textContent = avgReadTime + ' min';
+
+    // Top Posts by Views
+    const topViews = [...data].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 3);
+    const topList = document.getElementById('analyticsTopViewsList');
+    topList.innerHTML = '';
+    topViews.forEach(p => {
+      const item = document.createElement('div');
+      item.className = 'analytics-item';
+      item.innerHTML = `
+        <div class="analytics-item-title">${p.title || 'Untitled'}</div>
+        <div class="analytics-item-value">👁️ ${p.views || 0}</div>
+      `;
+      topList.appendChild(item);
+    });
+
+    // Categories Distribution
+    const catCount = {};
+    data.forEach(p => {
+      if (p.category) catCount[p.category] = (catCount[p.category] || 0) + 1;
+    });
+    const catList = document.getElementById('analyticsCategoriesList');
+    catList.innerHTML = '';
+    const totalCats = Object.values(catCount).reduce((a, b) => a + b, 0);
+
+    Object.entries(catCount).sort((a, b) => b[1] - a[1]).forEach(([cat, count]) => {
+      const pct = Math.round((count / totalCats) * 100);
+      const item = document.createElement('div');
+      item.className = 'analytics-item-progress';
+      item.style.marginBottom = '.75rem';
+      item.innerHTML = `
+        <div class="analytics-item-progress-label">
+          <span>${cat}</span>
+          <span>${count} post${count !== 1 ? 's' : ''} (${pct}%)</span>
+        </div>
+        <div class="analytics-progress-bar-bg">
+          <div class="analytics-progress-bar-fill" style="width:${pct}%;"></div>
+        </div>
+      `;
+      catList.appendChild(item);
+    });
+
+  } catch (e) {
+    console.error('Error loading analytics:', e);
+  }
+}
+
+
+// ═══ SHARE BUTTON & MODAL ════════════════════════════════════
+function sharePost() {
+  if (!currentReadPost) return;
+  const shareUrl = window.location.origin + '?post=' + (currentReadPost.slug || generateSlug(currentReadPost.title));
+  const shareText = `Check out this amazing blog post on TechBytes: "${currentReadPost.title}"!`;
+
+  if (navigator.share) {
+    navigator.share({
+      title: currentReadPost.title,
+      text: shareText,
+      url: shareUrl
+    }).catch(err => {
+      openShareModal();
+    });
+  } else {
+    openShareModal();
+  }
+}
+
+function openShareModal() {
+  const m = document.getElementById('shareModal');
+  if (m) m.style.display = 'flex';
+}
+
+function closeShareModal() {
+  const m = document.getElementById('shareModal');
+  if (m) m.style.display = 'none';
+}
+
+function copyShareLink() {
+  if (!currentReadPost) return;
+  const shareUrl = window.location.origin + '?post=' + (currentReadPost.slug || generateSlug(currentReadPost.title));
+  navigator.clipboard.writeText(shareUrl).then(() => {
+    showToast('🔗', 'Share link copied to clipboard!');
+    closeShareModal();
+  }).catch(e => {
+    showToast('⚠️', 'Failed to copy link.');
+  });
+}
+
+function shareToTwitter() {
+  if (!currentReadPost) return;
+  const shareUrl = window.location.origin + '?post=' + (currentReadPost.slug || generateSlug(currentReadPost.title));
+  const shareText = `Check out this amazing blog post on TechBytes: "${currentReadPost.title}"!`;
+  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+  window.open(twitterUrl, '_blank');
+  closeShareModal();
+}
+
+function shareToWhatsApp() {
+  if (!currentReadPost) return;
+  const shareUrl = window.location.origin + '?post=' + (currentReadPost.slug || generateSlug(currentReadPost.title));
+  const shareText = `Check out this amazing blog post on TechBytes: "${currentReadPost.title}"! ${shareUrl}`;
+  const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+  window.open(whatsappUrl, '_blank');
+  closeShareModal();
+}
+
+
 // ═══ INIT APP ═════════════════════════════════════════════════
 export function initApp() {
 
@@ -2062,6 +2822,20 @@ export function initApp() {
     else if (event === 'SIGNED_OUT') showLogin();
   });
 
+  // Check for post in URL query params
+  setTimeout(async () => {
+    const params = new URLSearchParams(window.location.search);
+    const postSlug = params.get('post');
+    if (postSlug) {
+      try {
+        const { data } = await _supabase.from('posts').select('*').eq('slug', postSlug).maybeSingle();
+        if (data) {
+          openRead(data);
+        }
+      } catch (e) { console.warn('Could not load shared post:', e); }
+    }
+  }, 1500);
+
   // Drag and drop image upload
   const zone = document.getElementById('imageZone');
   zone.addEventListener('dragover', e => {
@@ -2101,6 +2875,15 @@ export function initApp() {
     loadUsername, loadUsernames,
     toggleWriterSearch, searchWriters,
     showFollowersList, showFollowingList, closeFollowModal,
-    toggleMobileNav, closeMobileNav
+    toggleMobileNav, closeMobileNav,
+    
+    // New premium features
+    incrementView,
+    toggleBookmark, loadBookmarks, loadBookmarksView,
+    loadComments, submitComment, deleteComment,
+    createNotification, loadNotifications, markAllRead, toggleNotifPanel,
+    computeBadges, renderBadges,
+    toggleAnalyticsView, loadAnalytics,
+    sharePost, closeShareModal, copyShareLink, shareToTwitter, shareToWhatsApp
   });
 }

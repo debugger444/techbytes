@@ -412,3 +412,262 @@ kbd{background:var(--surface2);border:1px solid var(--border);border-radius:4px;
 .follow-modal-empty{text-align:center;padding:2rem 1rem;color:var(--muted);font-size:.88rem;}
 .follow-modal-empty .empty-icon{font-size:2.5rem;margin-bottom:.75rem;}
 @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+/* NEW PREMIUM FEATURES CSS */
+
+/* 1. View Counter & Bookmarks Badges on Cards */
+.view-badge, .bookmark-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: .25rem .75rem;
+  font-size: .82rem;
+  cursor: pointer;
+  transition: all .2s;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+}
+.bookmark-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: scale(1.08);
+}
+.bookmark-btn.bookmarked {
+  background: rgba(124, 92, 252, 0.12);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.view-badge {
+  cursor: default;
+}
+.view-badge:hover {
+  transform: none;
+}
+
+/* 2. Notifications System Dropdown Animation */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.notif-item {
+  display: flex;
+  gap: .75rem;
+  padding: .85rem 1rem;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background .2s;
+}
+.notif-item:last-child {
+  border-bottom: none;
+}
+.notif-item:hover {
+  background: rgba(124, 92, 252, .04);
+}
+.notif-item.unread {
+  background: rgba(124, 92, 252, .08);
+}
+.notif-item.unread:hover {
+  background: rgba(124, 92, 252, .12);
+}
+.notif-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+.notif-content {
+  flex: 1;
+  font-size: .8rem;
+  line-height: 1.4;
+}
+.notif-text {
+  color: var(--text);
+  margin-bottom: .2rem;
+}
+.notif-text strong {
+  color: var(--accent);
+}
+.notif-date {
+  color: var(--muted);
+  font-size: .72rem;
+}
+
+/* 3. Achievements Badges Sidebar Card */
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: .25rem .65rem;
+  font-size: .7rem;
+  font-weight: 600;
+  color: var(--text);
+  transition: all .2s;
+  cursor: help;
+}
+.badge-pill:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 10px rgba(124, 92, 252, .25);
+  transform: translateY(-1px);
+}
+.badge-icon {
+  font-size: .85rem;
+}
+
+/* 4. Comments Section Styles */
+.comment-item {
+  display: flex;
+  gap: .75rem;
+  padding: 1rem;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  animation: slideUp .3s ease;
+}
+.comment-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .8rem;
+  color: #fff;
+  font-weight: 700;
+  flex-shrink: 0;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+.comment-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.comment-content {
+  flex: 1;
+}
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-bottom: .35rem;
+  font-size: .78rem;
+}
+.comment-author {
+  font-weight: 600;
+  color: var(--text);
+}
+.comment-date {
+  color: var(--muted);
+  font-size: .72rem;
+}
+.comment-del-btn {
+  background: none;
+  border: none;
+  color: var(--danger);
+  font-size: .72rem;
+  cursor: pointer;
+  margin-left: auto;
+  font-weight: 500;
+}
+.comment-del-btn:hover {
+  text-decoration: underline;
+}
+.comment-body {
+  font-size: .85rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+/* 5. Share Modal CSS */
+.share-modal-overlay.show {
+  display: flex !important;
+}
+
+/* 6. Author Analytics Styles */
+.analytics-container {
+  animation: slideUp .4s ease forwards;
+}
+.analytics-card:hover {
+  border-color: rgba(124,92,252,.3) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0,0,0,.2);
+  transition: all .2s;
+}
+.analytics-chart-box:hover {
+  border-color: rgba(124,92,252,.3) !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,.2);
+  transition: all .2s;
+}
+.analytics-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: .75rem 1rem;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: .8rem;
+}
+.analytics-item-title {
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70%;
+}
+.analytics-item-value {
+  color: var(--accent);
+  font-weight: 600;
+}
+.analytics-item-progress {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+}
+.analytics-item-progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: .78rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+.analytics-item-progress-label span:first-child {
+  color: var(--text);
+}
+.analytics-progress-bar-bg {
+  width: 100%;
+  height: 6px;
+  background: var(--surface2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.analytics-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 10px;
+}
+.btn.btn-ghost.active {
+  background: rgba(124, 92, 252, 0.15);
+  border-color: var(--accent);
+  color: #a78bfc;
+}
+
+@media(max-width: 768px) {
+  .analytics-charts-row {
+    grid-template-columns: 1fr !important;
+  }
+}
