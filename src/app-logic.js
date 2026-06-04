@@ -1,4 +1,44 @@
 import { supabase as _supabase } from './supabaseClient';
+import { rawIcon } from './icons.js';
+
+// SVG icon shorthand helpers (used inline in template literals)
+const SVG = {
+  heart:    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
+  heartFill:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="currentColor"/></svg>`,
+  bookmark: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`,
+  bookmarkFill:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" fill="currentColor"/></svg>`,
+  eye:      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`,
+  clock:    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+  link:     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,
+  warning:  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+  check:    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><polyline points="20 6 9 17 4 12"/></svg>`,
+  error:    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+  confetti: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><path d="M3 3v3m0 0l3-3M3 6h3M21 21v-3m0 3h-3m3 0l-3-3"/><path d="M5 19L19 5"/><circle cx="5" cy="19" r="1" fill="currentColor" stroke="none"/><circle cx="19" cy="5" r="1" fill="currentColor" stroke="none"/></svg>`,
+  mic:      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`,
+  stop:     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" fill="currentColor"/></svg>`,
+  save:     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>`,
+  lock:     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+  users:    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1.2em" height="1.2em" style="display:inline-block;vertical-align:middle"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  user:     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1.2em" height="1.2em" style="display:inline-block;vertical-align:middle"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+  notifLike:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="#fc5c7d"/></svg>`,
+  notifMsg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+  notifFollow:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>`,
+  notifBkm: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" fill="#7c5cfc"/></svg>`,
+  pen:      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>`,
+  note:     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1.2em" height="1.2em" style="display:inline-block;vertical-align:middle"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
+  mailbox:  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1.2em" height="1.2em" style="display:inline-block;vertical-align:middle"><path d="M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h8"/><path d="M22 7l-10 5L2 7"/><path d="M16 19h6"/><path d="M19 16v6"/></svg>`,
+  star:     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+  fire:     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`,
+  crown:    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><path d="M2 20h20"/><path d="M4 20L2 8l5 5 5-8 5 8 5-5-2 12"/></svg>`,
+  books:    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,
+  analytics:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
+  wave:     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><path d="M7 11c.33-2 2.67-2 3 0s2.67 2 3 0 2.67-2 3 0"/><path d="M3 15c.33-2 2.67-2 3 0s2.67 2 3 0 2.67-2 3 0 2.67-2 3 0"/></svg>`,
+  palette:  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>`,
+  sparkle:  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><path d="M12 3v1m0 16v1M3 12h1m16 0h1m-3.2-6.8-.7.7M6.9 17.1l-.7.7m0-11.4.7.7M17.1 17.1l.7.7"/><circle cx="12" cy="12" r="4"/></svg>`,
+  refresh:  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>`,
+  reply:    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" style="display:inline-block;vertical-align:middle"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>`,
+};
+
 
 // ═══ STATE ═══════════════════════════════════════════════════
 let currentUser = null,
@@ -34,7 +74,9 @@ function toggleTheme() {
   const h = document.documentElement,
         isDark = h.getAttribute('data-theme') === 'dark';
   h.setAttribute('data-theme', isDark ? 'light' : 'dark');
-  document.getElementById('themeBtn').textContent = isDark ? '☀️' : '🌙';
+  document.getElementById('themeBtn').innerHTML = isDark
+    ? SVG.sparkle.replace('width="1em" height="1em"', 'width="1.1em" height="1.1em"')
+    : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1.1em" height="1.1em" style="display:inline-block;vertical-align:middle"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
   localStorage.setItem('tb_theme', isDark ? 'light' : 'dark');
 }
 
@@ -96,7 +138,7 @@ function handleAvatarUpload(event) {
     userAvatarUrl = e.target.result;
     localStorage.setItem('tb_avatar_' + currentUser?.id, userAvatarUrl);
     updateAllAvatarDisplays();
-    showToast('', 'Profile picture updated!');
+    showToast(SVG.check, 'Profile picture updated!');
   };
   reader.readAsDataURL(file);
   event.target.value = '';
@@ -160,7 +202,7 @@ function startEditUsername() {
 async function saveUsername() {
   const username = document.getElementById('usernameInput').value.trim();
   if (!username || username.length < 2) {
-    showToast('⚠️', 'Username must be at least 2 characters.');
+    showToast(SVG.warning, 'Username must be at least 2 characters.');
     return;
   }
   try {
@@ -172,9 +214,9 @@ async function saveUsername() {
     document.getElementById('profileName').textContent = username;
     document.getElementById('userEmailLabel').textContent = username;
     cancelEditUsername();
-    showToast('✓', 'Username saved — visible to everyone!');
+    showToast(SVG.check, 'Username saved — visible to everyone!');
   } catch (e) {
-    showToast('⚠️', 'Could not save: ' + e.message);
+    showToast(SVG.warning, 'Could not save: ' + e.message);
   }
 }
 
@@ -425,7 +467,7 @@ async function loadFeed() {
   } catch (e) {
     grid.innerHTML = `
       <div class="empty-state">
-        <div class="empty-state-icon">⚠️</div>
+        <div class="empty-state-icon">${SVG.warning}</div>
         <div class="empty-state-title">Could not load posts</div>
         <div class="empty-state-sub">${e.message}</div>
       </div>`;
@@ -452,10 +494,10 @@ function renderFeedGrid() {
   if (!posts.length) {
     grid.innerHTML = `
       <div class="empty-state">
-        <div class="empty-state-icon">📭</div>
+        <div class="empty-state-icon">${SVG.mailbox}</div>
         <div class="empty-state-title">No posts found</div>
         <div class="empty-state-sub">Be the first to write something!</div>
-        <button class="btn btn-primary" onclick="switchView('editor')">✏️ Write a Blog</button>
+        <button class="btn btn-primary" onclick="switchView('editor')">${SVG.pen} Write a Blog</button>
       </div>`;
     return;
   }
@@ -522,10 +564,10 @@ async function loadMyBlogs() {
       document.getElementById('myBlogsMeta').textContent = '0 posts published';
       grid.innerHTML = `
         <div class="empty-state">
-          <div class="empty-state-icon">📝</div>
+          <div class="empty-state-icon">${SVG.note}</div>
           <div class="empty-state-title">No blogs yet</div>
           <div class="empty-state-sub">Start writing your first blog!</div>
-          <button class="btn btn-primary" onclick="switchView('editor')">✏️ Write Your First Blog</button>
+          <button class="btn btn-primary" onclick="switchView('editor')">${SVG.pen} Write Your First Blog</button>
         </div>`;
       return;
     }
@@ -536,7 +578,7 @@ async function loadMyBlogs() {
   } catch (e) {
     grid.innerHTML = `
       <div class="empty-state">
-        <div class="empty-state-icon">⚠️</div>
+        <div class="empty-state-icon">${SVG.warning}</div>
         <div class="empty-state-title">Error loading blogs</div>
         <div class="empty-state-sub">${e.message}</div>
       </div>`;
@@ -563,7 +605,7 @@ function buildCard(post, mode) {
   card.innerHTML = `
     ${post.image_url
       ? `<img class="blog-card-img" src="${post.image_url}" alt="${post.title || ''}" onerror="this.style.display='none'">`
-      : `<div class="blog-card-img-placeholder">📝</div>`
+      : `<div class="blog-card-img-placeholder">${SVG.note}</div>`
     }
     <div class="blog-card-body">
       ${post.category ? `<div class="blog-card-category">${post.category}</div>` : ''}
@@ -574,7 +616,7 @@ function buildCard(post, mode) {
           <div class="author-avatar-sm" style="background:${color}">${avatarHtml}</div>
           <div>
             <button class="author-name-link" onclick="openAuthorProfile('${post.user_id}')" title="View ${authorName}'s profile">${authorName}</button>
-            <div class="blog-card-meta">⏱ ${rt}</div>
+            <div class="blog-card-meta">${SVG.clock} ${rt}</div>
           </div>
         </div>
         <div class="blog-card-actions">
@@ -588,12 +630,12 @@ function buildCard(post, mode) {
     </div>
     <div class="like-row" style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
       <button class="like-btn ${isLiked ? 'liked' : ''}" onclick="quickLike('${post.id}',this)">
-        ❤️ <span class="like-num">${post.claps || 0}</span>
+        ${SVG.heart} <span class="like-num">${post.claps || 0}</span>
       </button>
       <button class="bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" data-id="${post.id}" onclick="toggleBookmark('${post.id}',this)" title="Bookmark post">
-        🔖
+        ${SVG.bookmark}
       </button>
-      <span class="view-badge">👁️ <span class="view-num">${post.views || 0}</span></span>
+      <span class="view-badge">${SVG.eye} <span class="view-num">${post.views || 0}</span></span>
       <span style="font-size:.72rem;color:var(--muted);margin-left:auto;">${date}</span>
     </div>`;
 
@@ -607,7 +649,7 @@ async function quickLike(postId, btn) {
     showGuestToast();
     return;
   }
-  burstEffect(btn, '❤️');
+  burstEffect(btn, SVG.heartFill);
   const wasLiked = likedPosts.has(postId);
 
   if (wasLiked) {
@@ -659,7 +701,7 @@ function burstEffect(el, emoji) {
 async function deletePost(postId, btn) {
   if (!confirm('Delete this blog post? This cannot be undone.')) return;
   btn.disabled = true;
-  btn.textContent = '…';
+  btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" style="display:inline-block;vertical-align:middle;animation:spin .7s linear infinite"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>`;
 
   try {
     const { error } = await _supabase
@@ -676,12 +718,12 @@ async function deletePost(postId, btn) {
     card.style.transition = 'all .3s ease';
     setTimeout(() => { card.remove(); loadMyBlogs(); }, 300);
 
-    showToast('delete', 'Blog deleted.');
+    showToast(SVG.check, 'Blog deleted.');
     loadPostsCount();
   } catch (e) {
     btn.disabled = false;
     btn.textContent = 'delete';
-    showToast('⚠️', 'Could not delete: ' + e.message);
+    showToast(SVG.warning, 'Could not delete: ' + e.message);
     console.error('Delete error:', e);
   }
 }
@@ -722,10 +764,10 @@ function openRead(post) {
   document.getElementById('readAuthorMeta').textContent =
     new Date(post.created_at).toLocaleDateString('en-US', {
       year: 'numeric', month: 'long', day: 'numeric'
-    }) + ' · ' + calcReadTime(post.body) + ' · 👁️ ' + viewsCount + ' views';
+    }) + ' · ' + calcReadTime(post.body) + ' · ' + SVG.eye + ' ' + viewsCount + ' views';
 
-  document.getElementById('readSlug').textContent =
-    '🔗 techbytes.com/blog/' + (post.slug || generateSlug(post.title || ''));
+  document.getElementById('readSlug').innerHTML =
+    SVG.link + ' techbytes.com/blog/' + (post.slug || generateSlug(post.title || ''));
 
   const cap = document.getElementById('readCaption');
   if (post.caption) {
@@ -750,7 +792,9 @@ function openRead(post) {
     bookmarkBtn.setAttribute('data-id', post.id);
     const hasBookmarked = bookmarkedPosts.has(post.id);
     bookmarkBtn.classList.toggle('bookmarked', hasBookmarked);
-    bookmarkBtn.innerHTML = hasBookmarked ? '🔖 Bookmarked' : '🔖 Bookmark';
+    bookmarkBtn.innerHTML = hasBookmarked
+      ? `${SVG.bookmarkFill} Bookmarked`
+      : `${SVG.bookmark} Bookmark`;
   }
 
   // Comments Visibility & loading
@@ -770,7 +814,7 @@ async function handleReadLike() {
   }
   if (!currentReadPost) return;
   const btn = document.getElementById('bigLikeBtn');
-  burstEffect(btn, '❤️');
+  burstEffect(btn, SVG.heartFill);
 
   const wasLiked = likedPosts.has(currentReadPost.id);
   if (wasLiked) {
@@ -780,7 +824,7 @@ async function handleReadLike() {
   } else {
     likedPosts.add(currentReadPost.id);
     btn.classList.add('liked');
-    document.getElementById('likeMsg').textContent = '❤️ Thanks for the like!';
+    document.getElementById('likeMsg').innerHTML = SVG.heartFill + ' Thanks for the like!';
   }
 
   try {
@@ -902,7 +946,7 @@ async function loadFollows() {
 
 async function toggleFollow(userId, btn) {
   if (!currentUser) {
-    showToast('⚠️', 'Please sign in first.');
+    showToast(SVG.warning, 'Please sign in first.');
     return;
   }
 
@@ -930,13 +974,13 @@ async function toggleFollow(userId, btn) {
         .eq('follower_id', currentUser.id)
         .eq('following_id', userId);
       if (error) throw error;
-      showToast('', 'Unfollowed.');
+      showToast(SVG.check, 'Unfollowed.');
     } else {
       const { error } = await _supabase
         .from('follows')
         .insert([{ follower_id: currentUser.id, following_id: userId }]);
       if (error) throw error;
-      showToast('', 'Following!');
+      showToast(SVG.check, 'Following!');
     }
   } catch (e) {
     // Revert on failure
@@ -950,7 +994,7 @@ async function toggleFollow(userId, btn) {
       btn.classList.remove('following');
     }
     if (statEl) statEl.textContent = followingSet.size;
-    showToast('⚠️', 'Could not update follow: ' + e.message);
+    showToast(SVG.warning, 'Could not update follow: ' + e.message);
   }
 }
 
@@ -1062,7 +1106,7 @@ async function handleSignUp() {
     setAuthLoading(false);
     if (data.session) {
       showApp(data.user);
-      showToast('🎉', 'Account created! Welcome to TechBytes.');
+      showToast(SVG.confetti, 'Account created! Welcome to TechBytes.');
     } else {
       showAuthSuccess('Account created! Sign in now.');
       switchTab('signin');
@@ -1077,7 +1121,7 @@ async function handleSignOut() {
   await _supabase.auth.signOut();
   currentUser = null;
   showLogin();
-  showToast('👋', 'Signed out.');
+  showToast(SVG.wave, 'Signed out.');
 }
 
 function continueWithoutAccount() {
@@ -1102,7 +1146,7 @@ function continueWithoutAccount() {
 
 function showGuestToast() {
   const toast = document.getElementById('toast');
-  document.getElementById('toastIcon').textContent = '🔒';
+  document.getElementById('toastIcon').innerHTML = SVG.lock;
   document.getElementById('toastMsg').textContent = 'Sign in to do this!';
   const signinBtn = document.getElementById('toastSignInBtn');
   signinBtn.style.display = 'inline-flex';
@@ -1181,11 +1225,11 @@ async function publishPost() {
   const category = document.querySelector('.cat-chip.active')?.textContent || null;
 
   if (!title) {
-    showPublishStatus('error', '⚠️ Please add a title before publishing.');
+    showPublishStatus('error', 'Please add a title before publishing.');
     return;
   }
   if (!body) {
-    showPublishStatus('error', '⚠️ Please write some content before publishing.');
+    showPublishStatus('error', 'Please write some content before publishing.');
     return;
   }
 
@@ -1207,18 +1251,18 @@ async function publishPost() {
     }]).select();
 
     if (error) {
-      showPublishStatus('error', '❌ Failed: ' + (error.message || 'Unknown'));
+      showPublishStatus('error', 'Failed: ' + (error.message || 'Unknown'));
       setPublishLoading(false);
       return;
     }
 
     setPublishLoading(false);
-    showPublishStatus('success', '🎉 Published! Your blog is live.');
-    showToast('', 'Blog published!');
+    showPublishStatus('success', 'Published! Your blog is live.');
+    showToast(SVG.confetti, 'Blog published!');
     loadPostsCount();
   } catch (e) {
     setPublishLoading(false);
-    showPublishStatus('error', '❌ Something went wrong.');
+    showPublishStatus('error', 'Something went wrong.');
   }
 }
 
@@ -1778,12 +1822,12 @@ async function generateAIImage() {
         useAIImage = true;
         document.getElementById('aiImgToggle').classList.add('active');
         imgEl.style.opacity = '1';
-        showToast('🎨', 'Cover generated from title!');
+        showToast(SVG.palette, 'Cover generated from title!');
       };
       imgEl.src = coverUrl;
     } else {
       document.getElementById('loadingState').style.display = 'none';
-      showToast('⚠️', 'Could not generate image. Please try again!');
+      showToast(SVG.warning, 'Could not generate image. Please try again!');
     }
   };
 
@@ -1806,8 +1850,8 @@ function showPreview() {
   document.getElementById('previewDate').textContent = new Date().toLocaleDateString('en-US', {
     year: 'numeric', month: 'long', day: 'numeric'
   });
-  document.getElementById('previewReadTime').textContent = '⏱ ' + calcReadTime(body);
-  document.getElementById('previewSlug').textContent = '🔗 techbytes.com/blog/' + generateSlug(title);
+  document.getElementById('previewReadTime').innerHTML = SVG.clock + ' ' + calcReadTime(body);
+  document.getElementById('previewSlug').innerHTML = SVG.link + ' techbytes.com/blog/' + generateSlug(title);
 
   const previewImg = document.getElementById('previewImage');
   let imgSrc = null;
@@ -1824,7 +1868,7 @@ function showPreview() {
   const section = document.getElementById('previewSection');
   section.classList.add('visible');
   section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  showToast('👁', 'Preview ready!');
+  showToast(SVG.eye, 'Preview ready!');
 }
 
 function resetForm() {
@@ -1855,12 +1899,18 @@ function resetForm() {
   lastKeywords = '';
   countWords();
   updateWordGoal(0);
-  showToast('✓', 'Form cleared!');
+  showToast(SVG.check, 'Form cleared!');
 }
 
-function showToast(icon, msg) {
+function showToast(iconHtml, msg) {
   const toast = document.getElementById('toast');
-  document.getElementById('toastIcon').textContent = icon;
+  const iconEl = document.getElementById('toastIcon');
+  // Support both HTML SVG strings and plain text chars
+  if (iconHtml && (iconHtml.includes('<svg') || iconHtml.includes('<span'))) {
+    iconEl.innerHTML = iconHtml;
+  } else {
+    iconEl.textContent = iconHtml || '';
+  }
   document.getElementById('toastMsg').textContent = msg;
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 2800);
@@ -1916,9 +1966,9 @@ function initVoiceTyping() {
 
   voiceRecognition.onerror = (event) => {
     if (event.error === 'not-allowed') {
-      showToast('⚠️', 'Microphone access denied. Please allow mic access.');
+      showToast(SVG.warning, 'Microphone access denied. Please allow mic access.');
     } else if (event.error !== 'aborted') {
-      showToast('⚠️', 'Voice error: ' + event.error);
+      showToast(SVG.warning, 'Voice error: ' + event.error);
     }
     stopVoice();
   };
@@ -1934,7 +1984,7 @@ function toggleVoice() {
   if (!voiceRecognition) {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
-      showToast('⚠️', 'Voice typing is not supported in this browser. Try Chrome.');
+      showToast(SVG.warning, 'Voice typing is not supported in this browser. Try Chrome.');
       return;
     }
     initVoiceTyping();
@@ -1956,7 +2006,7 @@ function startVoice() {
   }
   document.getElementById('voiceBtn').classList.add('recording');
   document.getElementById('voiceIndicator').classList.add('show');
-  showToast('🎙️', 'Voice typing started — speak now!');
+  showToast(SVG.mic, 'Voice typing started — speak now!');
 }
 
 function stopVoice() {
@@ -1964,7 +2014,7 @@ function stopVoice() {
   try { voiceRecognition.stop(); } catch (e) {}
   document.getElementById('voiceBtn').classList.remove('recording');
   document.getElementById('voiceIndicator').classList.remove('show');
-  showToast('⏹️', 'Voice typing stopped.');
+  showToast(SVG.stop, 'Voice typing stopped.');
 }
 
 // ═══ DISCOVER WRITERS SEARCH ══════════════════════════════════
@@ -2064,7 +2114,7 @@ async function showFollowersList() {
     const followerIds = (data || []).map(r => r.follower_id);
 
     if (!followerIds.length) {
-      body.innerHTML = `<div class="follow-modal-empty"><div class="empty-icon">👥</div>No followers yet.<br>Share your blogs to grow your audience!</div>`;
+      body.innerHTML = `<div class="follow-modal-empty"><div class="empty-icon">${SVG.users}</div>No followers yet.<br>Share your blogs to grow your audience!</div>`;
       return;
     }
 
@@ -2093,7 +2143,7 @@ async function showFollowingList() {
     const followingIds = (data || []).map(r => r.following_id);
 
     if (!followingIds.length) {
-      body.innerHTML = `<div class="follow-modal-empty"><div class="empty-icon">✨</div>Not following anyone yet.<br>Discover writers using the search!</div>`;
+      body.innerHTML = `<div class="follow-modal-empty"><div class="empty-icon">${SVG.sparkle}</div>Not following anyone yet.<br>Discover writers using the search!</div>`;
       return;
     }
 
@@ -2193,17 +2243,19 @@ async function toggleBookmark(postId, btn) {
   
   if (isBookmarked) {
     bookmarkedPosts.delete(postId);
-    showToast('🔖', 'Bookmark removed.');
+    showToast(SVG.bookmark, 'Bookmark removed.');
   } else {
     bookmarkedPosts.add(postId);
-    showToast('🔖', 'Post bookmarked!');
+    showToast(SVG.bookmarkFill, 'Post bookmarked!');
   }
 
   // Update visual status across all occurrences
   document.querySelectorAll(`.bookmark-btn[data-id="${postId}"]`).forEach(el => {
     const active = el.classList.toggle('bookmarked', !isBookmarked);
     if (el.id === 'readBookmarkBtn') {
-      el.innerHTML = active ? '🔖 Bookmarked' : '🔖 Bookmark';
+      el.innerHTML = active
+        ? `${SVG.bookmarkFill} Bookmarked`
+        : `${SVG.bookmark} Bookmark`;
     }
   });
 
@@ -2233,10 +2285,12 @@ async function toggleBookmark(postId, btn) {
     document.querySelectorAll(`.bookmark-btn[data-id="${postId}"]`).forEach(el => {
       const active = el.classList.toggle('bookmarked', isBookmarked);
       if (el.id === 'readBookmarkBtn') {
-        el.innerHTML = active ? '🔖 Bookmarked' : '🔖 Bookmark';
+        el.innerHTML = active
+          ? `${SVG.bookmarkFill} Bookmarked`
+          : `${SVG.bookmark} Bookmark`;
       }
     });
-    showToast('⚠️', 'Error syncing bookmark.');
+    showToast(SVG.warning, 'Error syncing bookmark.');
   }
 }
 
@@ -2261,7 +2315,7 @@ async function loadBookmarksView() {
       document.getElementById('bookmarksMeta').textContent = '0 saved posts';
       grid.innerHTML = `
         <div class="empty-state">
-          <div class="empty-state-icon">🔖</div>
+          <div class="empty-state-icon">${SVG.bookmark}</div>
           <div class="empty-state-title">No bookmarks saved</div>
           <div class="empty-state-sub">Browse the feed and save articles for later reading!</div>
           <button class="btn btn-primary" onclick="switchView('feed')">Explore Feed</button>
@@ -2359,7 +2413,7 @@ async function submitComment() {
   const input = document.getElementById('commentBody');
   const body = input.value.trim();
   if (!body) {
-    showToast('⚠️', 'Comment cannot be empty!');
+    showToast(SVG.warning, 'Comment cannot be empty!');
     return;
   }
 
@@ -2373,7 +2427,7 @@ async function submitComment() {
 
     if (error) throw error;
     input.value = '';
-    showToast('✓', 'Comment posted!');
+    showToast(SVG.check, 'Comment posted!');
     loadComments(currentReadPost.id);
 
     // Notify post author
@@ -2386,7 +2440,7 @@ async function submitComment() {
       );
     }
   } catch (e) {
-    showToast('⚠️', 'Could not post comment.');
+    showToast(SVG.warning, 'Could not post comment.');
   }
 }
 
@@ -2400,10 +2454,10 @@ async function deleteComment(commentId) {
       .eq('user_id', currentUser.id);
 
     if (error) throw error;
-    showToast('✓', 'Comment deleted!');
+    showToast(SVG.check, 'Comment deleted!');
     if (currentReadPost) loadComments(currentReadPost.id);
   } catch (e) {
-    showToast('⚠️', 'Failed to delete comment.');
+    showToast(SVG.warning, 'Failed to delete comment.');
   }
 }
 
@@ -2515,7 +2569,7 @@ async function markAllRead() {
   if (!currentUser) return;
   try {
     await _supabase.from('notifications').update({ read: true }).eq('recipient_id', currentUser.id);
-    showToast('✓', 'All notifications marked as read.');
+    showToast(SVG.check, 'All notifications marked as read.');
     loadNotifications();
   } catch (e) {}
 }
@@ -2546,25 +2600,25 @@ function computeBadges(postsCount, totalLikes, followersCount, bookmarksCount) {
   const badges = [];
 
   if (postsCount >= 1) {
-    badges.push({ icon: '🎉', name: 'First Post', desc: 'Published your first post!' });
+    badges.push({ icon: SVG.confetti,  name: 'First Post',      desc: 'Published your first post!' });
   }
   if (postsCount >= 5) {
-    badges.push({ icon: '✍️', name: 'Prolific Writer', desc: 'Published 5 or more posts!' });
+    badges.push({ icon: SVG.pen,       name: 'Prolific Writer', desc: 'Published 5 or more posts!' });
   }
   if (totalLikes >= 1) {
-    badges.push({ icon: '❤️', name: 'Liked!', desc: 'Received your first like!' });
+    badges.push({ icon: SVG.heart,     name: 'Liked!',          desc: 'Received your first like!' });
   }
   if (totalLikes >= 10) {
-    badges.push({ icon: '🔥', name: 'Popular', desc: 'Received 10 or more total claps!' });
+    badges.push({ icon: SVG.fire,      name: 'Popular',         desc: 'Received 10 or more total claps!' });
   }
   if (followersCount >= 1) {
-    badges.push({ icon: '⭐', name: 'Rising Star', desc: 'Gained your first follower!' });
+    badges.push({ icon: SVG.star,      name: 'Rising Star',     desc: 'Gained your first follower!' });
   }
   if (followersCount >= 5) {
-    badges.push({ icon: '👑', name: 'Influencer', desc: 'Gained 5 or more followers!' });
+    badges.push({ icon: SVG.crown,     name: 'Influencer',      desc: 'Gained 5 or more followers!' });
   }
   if (bookmarksCount >= 1) {
-    badges.push({ icon: '📚', name: 'Bookmarked!', desc: 'Had your posts saved by others!' });
+    badges.push({ icon: SVG.books,     name: 'Bookmarked!',     desc: 'Had your posts saved by others!' });
   }
 
   return badges;
@@ -2646,7 +2700,7 @@ function toggleAnalyticsView() {
     if (grid) grid.style.display = 'none';
     if (analytics) analytics.style.display = 'block';
     if (btn) {
-      btn.textContent = '📚 Show Blogs';
+      btn.innerHTML = `${SVG.books} Show Blogs`;
       btn.classList.add('active');
     }
     loadAnalytics();
@@ -2654,7 +2708,7 @@ function toggleAnalyticsView() {
     if (grid) grid.style.display = 'grid';
     if (analytics) analytics.style.display = 'none';
     if (btn) {
-      btn.textContent = '📈 Analytics';
+      btn.innerHTML = `${SVG.analytics} Analytics`;
       btn.classList.remove('active');
     }
   }
@@ -2704,7 +2758,7 @@ async function loadAnalytics() {
       item.className = 'analytics-item';
       item.innerHTML = `
         <div class="analytics-item-title">${p.title || 'Untitled'}</div>
-        <div class="analytics-item-value">👁️ ${p.views || 0}</div>
+        <div class="analytics-item-value">${SVG.eye} ${p.views || 0}</div>
       `;
       topList.appendChild(item);
     });
@@ -2774,10 +2828,10 @@ function copyShareLink() {
   if (!currentReadPost) return;
   const shareUrl = window.location.origin + '?post=' + (currentReadPost.slug || generateSlug(currentReadPost.title));
   navigator.clipboard.writeText(shareUrl).then(() => {
-    showToast('🔗', 'Share link copied to clipboard!');
+    showToast(SVG.link, 'Share link copied to clipboard!');
     closeShareModal();
   }).catch(e => {
-    showToast('⚠️', 'Failed to copy link.');
+    showToast(SVG.warning, 'Failed to copy link.');
   });
 }
 
@@ -2946,7 +3000,7 @@ async function openAuthorProfile(userId) {
     if (!posts || !posts.length) {
       grid.innerHTML = `
         <div class="empty-state">
-          <div class="empty-state-icon">📝</div>
+          <div class="empty-state-icon">${SVG.note}</div>
           <div class="empty-state-title">No posts yet</div>
           <div class="empty-state-sub">${isOwnProfile ? 'Start writing your first story!' : 'This writer hasn\'t published anything yet.'}</div>
           ${isOwnProfile ? '<button class="btn btn-primary" onclick="switchView(\'editor\')">Write Your First Blog</button>' : ''}
@@ -3021,9 +3075,9 @@ async function saveProfileBio() {
     bioEl.style.display = 'block';
     document.getElementById('profilePageBioEdit').style.display = 'none';
     document.getElementById('profilePageEditBioBtn').style.display = 'inline-flex';
-    showToast('✓', 'Bio saved!');
+    showToast(SVG.check, 'Bio saved!');
   } catch (e) {
-    showToast('⚠️', 'Could not save bio. Make sure the bio column exists in your profiles table.');
+    showToast(SVG.warning, 'Could not save bio. Make sure the bio column exists in your profiles table.');
     cancelEditBio();
   }
 }
@@ -3043,7 +3097,8 @@ export function initApp() {
     const s = localStorage.getItem('tb_theme') || 'dark';
     document.documentElement.setAttribute('data-theme', s);
     setTimeout(() => {
-      document.getElementById('themeBtn').textContent = s === 'dark' ? '🌙' : '☀️';
+    const moonSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1.1em" height="1.1em"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+      document.getElementById('themeBtn').innerHTML = s === 'dark' ? moonSvg : SVG.sparkle;
     }, 50);
   })();
 
@@ -3053,7 +3108,7 @@ export function initApp() {
       if (e.key === 's') {
         e.preventDefault();
         triggerAutoSave();
-        showToast('💾', 'Draft saved!');
+        showToast(SVG.save, 'Draft saved!');
       } else if (e.key === 'p') {
         e.preventDefault();
         showPreview();

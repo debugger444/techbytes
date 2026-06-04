@@ -1,3 +1,4 @@
+import { rawIcon } from './icons.js';
 export const bodyHTML = `
 <!-- LOGIN -->
 <div id="loginOverlay">
@@ -32,12 +33,12 @@ export const bodyHTML = `
     <button class="nav-tab" id="navBookmarks" onclick="switchView('bookmarks')">Bookmarks</button>
   </div>
   <div class="header-right">
-    <span class="autosave-tag" id="autosaveTag">✓ Draft saved</span>
+    <span class="autosave-tag" id="autosaveTag"><span class="svg-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="0.85em" height="0.85em"><polyline points="20 6 9 17 4 12"/></svg></span> Draft saved</span>
     <span class="user-pill" id="userPill" style="display:none;"><span class="user-pill-dot"></span><span id="userEmailLabel">user</span></span>
 
     <div class="notif-wrap" id="notifWrap" style="display:none;position:relative;">
       <button class="notif-btn" id="notifBtn" onclick="toggleNotifPanel()" title="Notifications" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.45rem .7rem;cursor:pointer;font-size:1rem;transition:all .2s;color:var(--text);position:relative;display:flex;align-items:center;justify-content:center;">
-        🔔<span class="notif-badge" id="notifBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--danger);color:#fff;border-radius:50%;width:16px;height:16px;font-size:.65rem;display:flex;align-items:center;justify-content:center;font-weight:700;">0</span>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1.1em" height="1.1em"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="notif-badge" id="notifBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--danger);color:#fff;border-radius:50%;width:16px;height:16px;font-size:.65rem;display:flex;align-items:center;justify-content:center;font-weight:700;">0</span>
       </button>
       <div class="notif-panel" id="notifPanel" style="display:none;position:absolute;right:0;top:45px;background:var(--surface);border:1px solid var(--border);border-radius:12px;width:320px;max-height:400px;overflow-y:auto;z-index:1000;box-shadow:0 10px 30px rgba(0,0,0,.5);animation:slideUp .2s ease;">
         <div class="notif-header" style="display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;border-bottom:1px solid var(--border);font-size:.8rem;font-weight:600;color:var(--text);">
@@ -53,7 +54,7 @@ export const bodyHTML = `
     <button class="btn-publish" id="headerPublishBtn" onclick="publishPost()">
       <span id="pubSpinH" style="display:none;width:13px;height:13px;border:2px solid rgba(0,0,0,.3);border-top-color:#000;border-radius:50%;animation:spin .7s linear infinite;"></span>Publish
     </button>
-    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle theme"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1.1em" height="1.1em"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
     <button class="btn-signout" id="signoutBtn" style="display:none;" onclick="handleSignOut()">Sign out</button>
     <button class="hamburger" id="hamburgerBtn" onclick="toggleMobileNav()" aria-label="Open navigation">
       <span></span><span></span><span></span>
@@ -63,12 +64,12 @@ export const bodyHTML = `
 
 <!-- MOBILE NAV OVERLAY -->
 <nav class="mobile-nav" id="mobileNav">
-  <button class="nav-tab active" id="mNavFeed" onclick="switchView('feed');closeMobileNav()">🏠 Feed</button>
-  <button class="nav-tab" id="mNavWrite" onclick="switchView('editor');closeMobileNav()">✍️ Write</button>
-  <button class="nav-tab" id="mNavMyBlogs" onclick="switchView('myblogs');closeMobileNav()">📚 My Blogs</button>
-  <button class="nav-tab" id="mNavBookmarks" onclick="switchView('bookmarks');closeMobileNav()">🔖 Bookmarks</button>
+  <button class="nav-tab active" id="mNavFeed" onclick="switchView('feed');closeMobileNav()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em"><path d="M3 9.75L12 3l9 6.75V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9.75z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Feed</button>
+  <button class="nav-tab" id="mNavWrite" onclick="switchView('editor');closeMobileNav()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg> Write</button>
+  <button class="nav-tab" id="mNavMyBlogs" onclick="switchView('myblogs');closeMobileNav()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> My Blogs</button>
+  <button class="nav-tab" id="mNavBookmarks" onclick="switchView('bookmarks');closeMobileNav()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg> Bookmarks</button>
   <div class="mobile-nav-divider"></div>
-  <button class="nav-tab" onclick="toggleTheme();" style="color:var(--muted);">🌙 Toggle Theme</button>
+  <button class="nav-tab" onclick="toggleTheme();" style="color:var(--muted);"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> Toggle Theme</button>
   <button class="nav-tab" id="mNavSignOut" style="display:none;color:var(--danger);border-color:rgba(252,92,125,.25);" onclick="handleSignOut();closeMobileNav()">Sign Out</button>
 </nav>
 
@@ -99,7 +100,7 @@ export const bodyHTML = `
         <div class="sidebar-card" id="profileCard" style="display:none;">
           <div class="sidebar-title">Your Profile</div>
           <div class="profile-avatar-wrap" onclick="document.getElementById('avatarFileInput').click()" title="Click to change profile picture">
-            <div class="profile-avatar" id="profileAvatarEl">😊</div>
+            <div class="profile-avatar" id="profileAvatarEl"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="60%" height="60%" style="opacity:.6"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
             <div class="profile-avatar-edit"></div>
           </div>
           <div class="profile-name-row">
@@ -173,7 +174,7 @@ export const bodyHTML = `
           </div>
         </div>
         <div class="field-group">
-          <div class="field-label"><span>Your Blog</span><span style="display:flex;align-items:center;gap:.6rem;"><button class="voice-btn" id="voiceBtn" onclick="toggleVoice()" title="Voice typing"><span class="mic-icon">🎙️</span><span>Voice</span><span class="mic-dot"></span></button><span class="char-count" id="charCount">0 words</span></span></div>
+          <div class="field-label"><span>Your Blog</span><span style="display:flex;align-items:center;gap:.6rem;"><button class="voice-btn" id="voiceBtn" onclick="toggleVoice()" title="Voice typing"><span class="mic-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></span><span>Voice</span><span class="mic-dot"></span></button><span class="char-count" id="charCount">0 words</span></span></div>
           <div class="word-goal-row">
             <span class="wg-label">Goal:</span>
             <select class="wg-select" id="wordGoalSelect" onchange="updateWordGoal()">
@@ -224,15 +225,15 @@ export const bodyHTML = `
           <div class="field-label">Cover Image</div>
           <div class="image-zone" id="imageZone" onclick="document.getElementById('fileInput').click()">
             <div class="image-zone-inner" id="imagePlaceholder">
-              <div class="image-zone-icon">🖼️</div>
+              <div class="image-zone-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="2.5rem" height="2.5rem"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
               <div class="image-zone-text"><strong>Upload your photo</strong>Click to browse or drag & drop</div>
             </div>
             <img id="uploadedImg" style="display:none;" alt="Cover">
           </div>
           <input type="file" id="fileInput" accept="image/*" onchange="handleImageUpload(event)">
           <div class="image-actions" id="imageActions" style="display:none;">
-            <button onclick="removeImage()">delete Remove</button>
-            <button class="active" id="aiImgToggle" onclick="toggleAIImage()">✦ Use AI Image</button>
+            <button onclick="removeImage()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="0.9em" height="0.9em" style="display:inline-block;vertical-align:middle;margin-right:.3em"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Remove</button>
+            <button class="active" id="aiImgToggle" onclick="toggleAIImage()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="0.9em" height="0.9em" style="display:inline-block;vertical-align:middle;margin-right:.3em"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Use AI Image</button>
           </div>
         </div>
         <div class="field-group">
@@ -240,10 +241,10 @@ export const bodyHTML = `
           <input type="text" id="captionInput" placeholder="Your caption will appear here…" maxlength="200">
         </div>
         <div class="ai-panel">
-          <div class="ai-panel-title"> Suggestions</div>
+          <div class="ai-panel-title"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="0.9em" height="0.9em" style="display:inline-block;vertical-align:middle;margin-right:.35em"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Suggestions</div>
           <div class="ai-btn-row">
-            <button id="suggestBtn" onclick="suggestCaptions()">✦ Suggest Captions</button>
-            <button id="genImgBtn" onclick="generateAIImage()">Generate AI Image</button>
+            <button id="suggestBtn" onclick="suggestCaptions()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="0.9em" height="0.9em" style="display:inline-block;vertical-align:middle;margin-right:.35em"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Suggest Captions</button>
+            <button id="genImgBtn" onclick="generateAIImage()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="0.9em" height="0.9em" style="display:inline-block;vertical-align:middle;margin-right:.35em"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Generate AI Image</button>
           </div>
           <div id="loadingState" style="display:none;">
             <div class="loading-bar"><div class="loading-bar-inner"></div></div>
@@ -260,8 +261,8 @@ export const bodyHTML = `
           </div>
         </div>
         <div class="actions-bar">
-          <button class="btn btn-ghost" onclick="resetForm()">✕ Clear</button>
-          <button class="btn btn-gold" onclick="showPreview()" style="flex:1;">👁 Preview</button>
+          <button class="btn btn-ghost" onclick="resetForm()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="0.9em" height="0.9em" style="display:inline-block;vertical-align:middle;margin-right:.35em"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Clear</button>
+          <button class="btn btn-gold" onclick="showPreview()" style="flex:1;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="0.9em" height="0.9em" style="display:inline-block;vertical-align:middle;margin-right:.35em"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Preview</button>
           <button class="btn-publish" id="bottomPublishBtn" onclick="publishPost()" style="display:flex;">
             <span id="pubSpinB" style="display:none;width:13px;height:13px;border:2px solid rgba(0,0,0,.3);border-top-color:#000;border-radius:50%;animation:spin .7s linear infinite;"></span>Publish
           </button>
@@ -292,8 +293,8 @@ export const bodyHTML = `
         <div style="color:var(--muted);font-size:.88rem;margin-top:.2rem;" id="myBlogsMeta">Loading…</div>
       </div>
       <div style="display:flex;gap:.5rem;">
-        <button class="btn btn-ghost" id="toggleAnalyticsBtn" onclick="toggleAnalyticsView()">📈 Analytics</button>
-        <button class="btn btn-primary" onclick="switchView('editor')">✍️ Write New</button>
+        <button class="btn btn-ghost" id="toggleAnalyticsBtn" onclick="toggleAnalyticsView()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="0.9em" height="0.9em" style="display:inline-block;vertical-align:middle;margin-right:.35em"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analytics</button>
+        <button class="btn btn-primary" onclick="switchView('editor')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="0.9em" height="0.9em" style="display:inline-block;vertical-align:middle;margin-right:.35em"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>Write New</button>
       </div>
     </div>
     <div id="myBlogsGrid" class="blog-grid"></div>
@@ -345,7 +346,7 @@ export const bodyHTML = `
   <div id="readView" style="display:none;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
       <button class="read-back-btn" onclick="readGoBack()">← Back</button>
-      <button class="bookmark-btn" id="readBookmarkBtn" onclick="toggleBookmark(currentReadPost?.id, this)" title="Bookmark post" style="background:none;border:1px solid var(--border);border-radius:8px;padding:.4rem .8rem;cursor:pointer;color:var(--muted);transition:all .2s;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:500;">🔖 Bookmark</button>
+      <button class="bookmark-btn" id="readBookmarkBtn" onclick="toggleBookmark(currentReadPost?.id, this)" title="Bookmark post" style="background:none;border:1px solid var(--border);border-radius:8px;padding:.4rem .8rem;cursor:pointer;color:var(--muted);transition:all .2s;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:500;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="0.9em" height="0.9em" style="display:inline-block;vertical-align:middle;margin-right:.3em"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Bookmark</button>
     </div>
     <div class="read-article">
       <img id="readCover" class="read-cover" src="" alt="" style="display:none;">
@@ -353,7 +354,7 @@ export const bodyHTML = `
         <div class="read-category-label" id="readCategory"></div>
         <h1 class="read-title" id="readTitle"></h1>
         <div class="read-author-row">
-          <div class="read-author-avatar" id="readAuthorAvatar">✍</div>
+          <div class="read-author-avatar" id="readAuthorAvatar"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="55%" height="55%"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
           <div class="read-author-info">
             <button class="read-author-name author-name-link" id="readAuthorName" onclick="openAuthorProfileFromRead()" title="View author profile">Author</button>
             <span class="read-author-meta" id="readAuthorMeta"></span>
@@ -366,10 +367,10 @@ export const bodyHTML = `
       </div>
       <div class="read-like-section" style="display:flex;align-items:center;gap:1rem;margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border);flex-wrap:wrap;">
         <button class="big-like-btn" id="bigLikeBtn" onclick="handleReadLike()">
-          ❤️ <span class="lc" id="bigLikeCount">0</span>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1.1em" height="1.1em" style="display:inline-block;vertical-align:middle"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> <span class="lc" id="bigLikeCount">0</span>
         </button>
         <button class="share-btn" onclick="sharePost()" style="background:var(--surface2);border:1px solid var(--border);border-radius:100px;padding:.55rem 1.25rem;font-size:.9rem;font-weight:600;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:.35rem;transition:all .2s;font-family:'DM Sans',sans-serif;">
-          🌐 Share
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share
         </button>
         <span class="like-msg" id="likeMsg">Like this post!</span>
       </div>
@@ -403,7 +404,7 @@ export const bodyHTML = `
         <div class="profile-page-email" id="profilePageEmail"></div>
         <div class="profile-page-bio-wrap" id="profilePageBioWrap">
           <p class="profile-page-bio" id="profilePageBio"></p>
-          <button class="profile-page-edit-bio-btn" id="profilePageEditBioBtn" onclick="startEditBio()" style="display:none;">✏️ Edit bio</button>
+          <button class="profile-page-edit-bio-btn" id="profilePageEditBioBtn" onclick="startEditBio()" style="display:none;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="0.85em" height="0.85em" style="display:inline-block;vertical-align:middle;margin-right:.3em"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>Edit bio</button>
           <div id="profilePageBioEdit" style="display:none;margin-top:.75rem;">
             <textarea id="profilePageBioInput" placeholder="Write a short bio about yourself…" maxlength="200" style="width:100%;min-height:80px;background:var(--surface2);border:1px solid var(--accent);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.88rem;padding:.65rem .9rem;resize:none;outline:none;"></textarea>
             <div style="display:flex;gap:.5rem;margin-top:.5rem;">
@@ -441,7 +442,7 @@ export const bodyHTML = `
   <div class="follow-modal-card">
     <div class="follow-modal-header">
       <div class="follow-modal-title" id="followModalTitle">Followers</div>
-      <button class="follow-modal-close" onclick="closeFollowModal()">✕</button>
+      <button class="follow-modal-close" onclick="closeFollowModal()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="follow-modal-body" id="followModalBody">
       <div style="font-size:.85rem;color:var(--muted);text-align:center;padding:2rem;">Loading…</div>
@@ -453,15 +454,15 @@ export const bodyHTML = `
   <div class="share-modal-card" style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:1.5rem;width:90%;max-width:360px;box-shadow:0 20px 50px rgba(0,0,0,.6);animation:slideUp .3s ease;">
     <div class="share-modal-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
       <div class="share-modal-title" style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--text);">Share this blog</div>
-      <button class="share-modal-close" onclick="closeShareModal()" style="background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;">✕</button>
+      <button class="share-modal-close" onclick="closeShareModal()" style="background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="share-modal-body" style="display:flex;flex-direction:column;gap:.75rem;">
-      <button class="share-option-btn" onclick="copyShareLink()" style="width:100%;padding:.75rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;text-align:left;display:flex;align-items:center;gap:.5rem;transition:all .2s;">🔗 Copy Link</button>
-      <button class="share-option-btn" onclick="shareToTwitter()" style="width:100%;padding:.75rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;text-align:left;display:flex;align-items:center;gap:.5rem;transition:all .2s;">🐦 Share on X (Twitter)</button>
-      <button class="share-option-btn" onclick="shareToWhatsApp()" style="width:100%;padding:.75rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;text-align:left;display:flex;align-items:center;gap:.5rem;transition:all .2s;">💬 Share on WhatsApp</button>
+      <button class="share-option-btn" onclick="copyShareLink()" style="width:100%;padding:.75rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;text-align:left;display:flex;align-items:center;gap:.5rem;transition:all .2s;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Copy Link</button>
+      <button class="share-option-btn" onclick="shareToTwitter()" style="width:100%;padding:.75rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;text-align:left;display:flex;align-items:center;gap:.5rem;transition:all .2s;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> Share on X (Twitter)</button>
+      <button class="share-option-btn" onclick="shareToWhatsApp()" style="width:100%;padding:.75rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;text-align:left;display:flex;align-items:center;gap:.5rem;transition:all .2s;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg> Share on WhatsApp</button>
     </div>
   </div>
 </div>
 
-<div class="toast" id="toast"><span class="toast-icon" id="toastIcon">✓</span><span id="toastMsg">Done!</span><button class="toast-signin-btn" id="toastSignInBtn" style="display:none;" onclick="showLoginFromToast()">Sign In</button></div>
+<div class="toast" id="toast"><span class="toast-icon" id="toastIcon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em"><polyline points="20 6 9 17 4 12"/></svg></span><span id="toastMsg">Done!</span><button class="toast-signin-btn" id="toastSignInBtn" style="display:none;" onclick="showLoginFromToast()">Sign In</button></div>
 `;
