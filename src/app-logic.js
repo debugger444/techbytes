@@ -689,7 +689,7 @@ function burstEffect(el, emoji) {
   const rect = el.getBoundingClientRect();
   const burst = document.createElement('div');
   burst.className = 'like-burst';
-  burst.textContent = emoji;
+  burst.innerHTML = emoji;
   burst.style.left = (rect.left + rect.width / 2 - 12) + 'px';
   burst.style.top = (rect.top - 10) + 'px';
   document.body.appendChild(burst);
@@ -761,7 +761,7 @@ function openRead(post) {
   
   // Set Views + Time Meta
   const viewsCount = post.views || 0;
-  document.getElementById('readAuthorMeta').textContent =
+  document.getElementById('readAuthorMeta').innerHTML =
     new Date(post.created_at).toLocaleDateString('en-US', {
       year: 'numeric', month: 'long', day: 'numeric'
     }) + ' · ' + calcReadTime(post.body) + ' · ' + SVG.eye + ' ' + viewsCount + ' views';
