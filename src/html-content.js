@@ -183,7 +183,41 @@ export const bodyHTML = `
             <div class="wg-bar-wrap"><div class="wg-bar" id="wgBar"></div></div>
             <span class="wg-label" id="wgStatus"></span>
           </div>
-          <textarea id="blogBody" class="blog-body" placeholder="Start writing…" oninput="countWords()"></textarea>
+          <!-- Quill Rich Text Editor -->
+          <div id="quillToolbar" class="quill-toolbar-wrap">
+            <span class="ql-formats">
+              <select class="ql-header">
+                <option value="1">Heading 1</option>
+                <option value="2">Heading 2</option>
+                <option value="3">Heading 3</option>
+                <option value="">Normal</option>
+              </select>
+            </span>
+            <span class="ql-formats">
+              <button class="ql-bold" title="Bold"></button>
+              <button class="ql-italic" title="Italic"></button>
+              <button class="ql-underline" title="Underline"></button>
+              <button class="ql-strike" title="Strikethrough"></button>
+            </span>
+            <span class="ql-formats">
+              <button class="ql-blockquote" title="Blockquote"></button>
+              <button class="ql-code-block" title="Code Block"></button>
+            </span>
+            <span class="ql-formats">
+              <button class="ql-list" value="ordered" title="Numbered List"></button>
+              <button class="ql-list" value="bullet" title="Bullet List"></button>
+            </span>
+            <span class="ql-formats">
+              <button class="ql-link" title="Insert Link"></button>
+              <button class="ql-image" title="Insert Image"></button>
+            </span>
+            <span class="ql-formats">
+              <button class="ql-clean" title="Clear Formatting"></button>
+            </span>
+          </div>
+          <div id="quillEditor" class="quill-editor-wrap"></div>
+          <!-- Hidden textarea synced from Quill — all existing save/publish code reads this -->
+          <textarea id="blogBody" style="display:none;"></textarea>
           <div class="voice-indicator" id="voiceIndicator"><span class="pulse-ring"></span><span>Listening… speak now</span></div>
         </div>
         <div class="field-group">
@@ -321,14 +355,14 @@ export const bodyHTML = `
         <div class="read-author-row">
           <div class="read-author-avatar" id="readAuthorAvatar">✍</div>
           <div class="read-author-info">
-            <span class="read-author-name" id="readAuthorName">Author</span>
+            <button class="read-author-name author-name-link" id="readAuthorName" onclick="openAuthorProfileFromRead()" title="View author profile">Author</button>
             <span class="read-author-meta" id="readAuthorMeta"></span>
           </div>
         </div>
         <div class="read-slug-line" id="readSlug"></div>
         <p class="read-caption" id="readCaption" style="display:none;"></p>
         <div class="read-divider"></div>
-        <div class="read-content" id="readContent"></div>
+        <div class="read-content ql-display" id="readContent"></div>
       </div>
       <div class="read-like-section" style="display:flex;align-items:center;gap:1rem;margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border);flex-wrap:wrap;">
         <button class="big-like-btn" id="bigLikeBtn" onclick="handleReadLike()">
@@ -355,6 +389,51 @@ export const bodyHTML = `
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- AUTHOR PROFILE PAGE -->
+  <div id="profileView" style="display:none;" class="profile-page-wrap">
+    <button class="read-back-btn" onclick="closeAuthorProfile()">← Back</button>
+    <div class="profile-page-hero">
+      <div class="profile-page-avatar-wrap">
+        <div class="profile-page-avatar" id="profilePageAvatar"></div>
+      </div>
+      <div class="profile-page-info">
+        <h1 class="profile-page-name" id="profilePageName"></h1>
+        <div class="profile-page-email" id="profilePageEmail"></div>
+        <div class="profile-page-bio-wrap" id="profilePageBioWrap">
+          <p class="profile-page-bio" id="profilePageBio"></p>
+          <button class="profile-page-edit-bio-btn" id="profilePageEditBioBtn" onclick="startEditBio()" style="display:none;">✏️ Edit bio</button>
+          <div id="profilePageBioEdit" style="display:none;margin-top:.75rem;">
+            <textarea id="profilePageBioInput" placeholder="Write a short bio about yourself…" maxlength="200" style="width:100%;min-height:80px;background:var(--surface2);border:1px solid var(--accent);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.88rem;padding:.65rem .9rem;resize:none;outline:none;"></textarea>
+            <div style="display:flex;gap:.5rem;margin-top:.5rem;">
+              <button class="edit-username-save" onclick="saveProfileBio()">Save Bio</button>
+              <button class="edit-username-cancel" onclick="cancelEditBio()">Cancel</button>
+            </div>
+          </div>
+        </div>
+        <div class="profile-page-stats">
+          <div class="profile-page-stat">
+            <div class="stat-num" id="profilePagePosts">0</div>
+            <div class="stat-label">Posts</div>
+          </div>
+          <div class="profile-page-stat">
+            <div class="stat-num" id="profilePageFollowers">0</div>
+            <div class="stat-label">Followers</div>
+          </div>
+          <div class="profile-page-stat">
+            <div class="stat-num" id="profilePageLikes">0</div>
+            <div class="stat-label">Likes</div>
+          </div>
+        </div>
+        <button class="btn-follow profile-page-follow-btn" id="profilePageFollowBtn" onclick="toggleFollowFromProfile()">Follow</button>
+      </div>
+    </div>
+    <div class="profile-page-posts-header">
+      <div style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;">Published <span style="background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Stories</span></div>
+      <div style="font-size:.82rem;color:var(--muted);" id="profilePagePostsMeta"></div>
+    </div>
+    <div id="profilePageGrid" class="blog-grid"></div>
   </div>
 </main>
 

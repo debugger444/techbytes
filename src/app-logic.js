@@ -57,7 +57,9 @@ function onTitleChange() {
 }
 
 function calcReadTime(text) {
-  const w = text ? text.trim().split(/\s+/).length : 0;
+  // Strip HTML tags for accurate word count
+  const stripped = (text || '').replace(/<[^>]*>/g, ' ');
+  const w = stripped ? stripped.trim().split(/\s+/).filter(Boolean).length : 0;
   return Math.max(1, Math.round(w / 200)) + ' min read';
 }
 
@@ -197,7 +199,7 @@ function getAvatarImgTag(userId, email, size) {
 // ═══ VIEW SWITCHING ═══════════════════════════════════════════
 function switchView(view) {
   // Hide all views
-  ['feedView', 'editorView', 'myblogsView', 'bookmarksView', 'readView'].forEach(id => {
+  ['feedView', 'editorView', 'myblogsView', 'bookmarksView', 'readView', 'profileView'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
@@ -242,6 +244,8 @@ function switchView(view) {
     loadBookmarksView();
   } else if (view === 'read') {
     document.getElementById('readView').style.display = 'block';
+  } else if (view === 'profile') {
+    document.getElementById('profileView').style.display = 'block';
   }
 
   prevView = currentView;
@@ -298,12 +302,17 @@ function closeMobileNav() {
 
 // ═══ WORD COUNT + GOAL ════════════════════════════════════════
 function countWords() {
-  const text = document.getElementById('blogBody').value.trim();
-  const count = text ? text.split(/\s+/).length : 0;
+  // Get text from Quill if available, otherwise fallback to textarea
+  let text = '';
+  if (window._quill) {
+    text = window._quill.getText().trim();
+  } else {
+    text = document.getElementById('blogBody').value.trim();
+  }
+  const count = text ? text.split(/\s+/).filter(Boolean).length : 0;
   const el = document.getElementById('charCount');
   el.textContent = count + ' word' + (count !== 1 ? 's' : '');
   el.className = 'char-count';
-  document.getElementById('blogBody').className = 'blog-body';
   updateWordGoal(count);
   scheduleAutoSave();
 }
@@ -332,7 +341,6 @@ function updateWordGoal(count) {
   } else if (pct >= 80) {
     status.textContent = (goal - count) + ' to go';
     document.getElementById('charCount').className = 'char-count warn';
-    document.getElementById('blogBody').className = 'blog-body warn';
   } else {
     status.textContent = (goal - count) + ' to go';
   }
@@ -560,12 +568,12 @@ function buildCard(post, mode) {
     <div class="blog-card-body">
       ${post.category ? `<div class="blog-card-category">${post.category}</div>` : ''}
       <div class="blog-card-title">${post.title || 'Untitled'}</div>
-      <div class="blog-card-excerpt">${post.body || ''}</div>
+      <div class="blog-card-excerpt">${(post.body || '').replace(/<[^>]*>/g, ' ').trim()}</div>
       <div class="blog-card-footer">
         <div class="blog-card-author">
           <div class="author-avatar-sm" style="background:${color}">${avatarHtml}</div>
           <div>
-            <div class="blog-card-meta">${authorName}</div>
+            <button class="author-name-link" onclick="openAuthorProfile('${post.user_id}')" title="View ${authorName}'s profile">${authorName}</button>
             <div class="blog-card-meta">⏱ ${rt}</div>
           </div>
         </div>
@@ -727,7 +735,7 @@ function openRead(post) {
     cap.style.display = 'none';
   }
 
-  document.getElementById('readContent').textContent = post.body || '';
+  document.getElementById('readContent').innerHTML = post.body || '';
 
   // Likes
   const liked = likedPosts.has(post.id);
@@ -1786,12 +1794,13 @@ async function generateAIImage() {
 
 function showPreview() {
   const title = document.getElementById('titleInput').value.trim() || 'Untitled Blog';
-  const body = document.getElementById('blogBody').value.trim() || '(No content yet)';
+  const body = window._quill ? window._quill.root.innerHTML.trim() : document.getElementById('blogBody').value.trim();
+  const plainBody = body.replace(/<[^>]*>/g, ' ');
   const caption = document.getElementById('captionInput').value.trim();
   const category = document.querySelector('.cat-chip.active')?.textContent || 'Blog';
 
   document.getElementById('previewTitle').textContent = title;
-  document.getElementById('previewText').textContent = body;
+  document.getElementById('previewText').innerHTML = body || '(No content yet)';
   document.getElementById('previewCaption').textContent = caption ? `"${caption}"` : '';
   document.getElementById('previewCategory').textContent = '✦ ' + category;
   document.getElementById('previewDate').textContent = new Date().toLocaleDateString('en-US', {
@@ -1821,9 +1830,15 @@ function showPreview() {
 function resetForm() {
   if (!confirm('Clear everything and start fresh?')) return;
 
-  ['titleInput', 'blogBody', 'captionInput'].forEach(id => {
+  ['titleInput', 'captionInput'].forEach(id => {
     document.getElementById(id).value = '';
   });
+  document.getElementById('blogBody').value = '';
+
+  // Clear Quill editor if initialized
+  if (window._quill) {
+    window._quill.setContents([]);
+  }
 
   document.getElementById('slugDisplay').textContent = 'your-blog-title';
   document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
@@ -1881,11 +1896,19 @@ function initVoiceTyping() {
       }
     }
     if (finalTranscript) {
-      const body = document.getElementById('blogBody');
-      const needsSpace = body.value.length > 0 &&
-        !body.value.endsWith(' ') &&
-        !body.value.endsWith('\n');
-      body.value += (needsSpace ? ' ' : '') + finalTranscript;
+      // Insert into Quill if available, otherwise into textarea
+      if (window._quill) {
+        const range = window._quill.getSelection(true);
+        const pos = range ? range.index : window._quill.getLength();
+        window._quill.insertText(pos, (pos > 0 ? ' ' : '') + finalTranscript);
+        window._quill.setSelection(pos + finalTranscript.length + 1);
+      } else {
+        const body = document.getElementById('blogBody');
+        const needsSpace = body.value.length > 0 &&
+          !body.value.endsWith(' ') &&
+          !body.value.endsWith('\n');
+        body.value += (needsSpace ? ' ' : '') + finalTranscript;
+      }
       finalTranscript = '';
       countWords();
     }
@@ -2777,6 +2800,241 @@ function shareToWhatsApp() {
 }
 
 
+// ═══ QUILL RICH TEXT EDITOR ════════════════════════════════════════
+function initQuillEditor() {
+  if (typeof Quill === 'undefined') {
+    console.warn('Quill not loaded, falling back to textarea.');
+    const ta = document.getElementById('blogBody');
+    if (ta) {
+      ta.style.display = '';
+      ta.className = 'blog-body';
+      ta.placeholder = 'Start writing…';
+      ta.addEventListener('input', countWords);
+    }
+    return;
+  }
+
+  const toolbarContainer = document.getElementById('quillToolbar');
+  const editorContainer = document.getElementById('quillEditor');
+  if (!toolbarContainer || !editorContainer) return;
+
+  window._quill = new Quill(editorContainer, {
+    theme: 'snow',
+    modules: {
+      toolbar: toolbarContainer,
+    },
+    placeholder: 'Start writing your story… Use the toolbar for bold, headings, code blocks, and more!',
+  });
+
+  // Sync Quill HTML → hidden textarea on every change
+  window._quill.on('text-change', () => {
+    const html = window._quill.root.innerHTML;
+    // Quill outputs '<p><br></p>' for empty — treat as empty
+    const isEmpty = html === '<p><br></p>' || html === '';
+    document.getElementById('blogBody').value = isEmpty ? '' : html;
+    countWords();
+  });
+
+  // Load existing draft content into Quill if there's something in textarea
+  const existing = document.getElementById('blogBody').value;
+  if (existing) {
+    window._quill.root.innerHTML = existing;
+  }
+}
+
+
+// ═══ AUTHOR PROFILE PAGE ════════════════════════════════════════
+let currentProfileUserId = null;
+
+async function openAuthorProfile(userId) {
+  if (!userId) return;
+  currentProfileUserId = userId;
+  prevView = currentView;
+  switchView('profile');
+
+  // Reset UI state
+  const grid = document.getElementById('profilePageGrid');
+  const followBtn = document.getElementById('profilePageFollowBtn');
+  document.getElementById('profilePageName').textContent = 'Loading…';
+  document.getElementById('profilePageEmail').textContent = '';
+  document.getElementById('profilePageBio').textContent = '';
+  document.getElementById('profilePagePosts').textContent = '0';
+  document.getElementById('profilePageFollowers').textContent = '0';
+  document.getElementById('profilePageLikes').textContent = '0';
+  document.getElementById('profilePagePostsMeta').textContent = '';
+  document.getElementById('profilePageEditBioBtn').style.display = 'none';
+  grid.innerHTML = '<div class="card-skeleton"><div class="card-skel-img"></div><div class="card-skel-body"><div class="card-skel-line" style="width:60%"></div><div class="card-skel-line" style="width:80%"></div></div></div>'.repeat(3);
+
+  // Hide follow button for own profile
+  const isOwnProfile = currentUser && userId === currentUser.id;
+  followBtn.style.display = isOwnProfile ? 'none' : 'inline-flex';
+  if (isOwnProfile) {
+    document.getElementById('profilePageEditBioBtn').style.display = 'inline-flex';
+  }
+
+  try {
+    // Load profile data
+    const { data: profile } = await _supabase
+      .from('profiles')
+      .select('id, username, bio')
+      .eq('id', userId)
+      .maybeSingle();
+
+    const username = profile?.username || usernameCache[userId] || 'Writer';
+    if (profile?.username) usernameCache[userId] = profile.username;
+
+    const color = avatarColor(userId);
+    const savedAv = localStorage.getItem('tb_avatar_' + userId);
+
+    // Set avatar
+    const avatarEl = document.getElementById('profilePageAvatar');
+    avatarEl.style.background = color;
+    if (savedAv) {
+      avatarEl.innerHTML = `<img src="${savedAv}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+    } else {
+      avatarEl.textContent = getInitial(username);
+    }
+
+    document.getElementById('profilePageName').textContent = username;
+
+    // Bio
+    const bioEl = document.getElementById('profilePageBio');
+    if (profile?.bio) {
+      bioEl.textContent = profile.bio;
+      bioEl.style.display = 'block';
+    } else {
+      bioEl.textContent = isOwnProfile ? 'Click \u201cEdit bio\u201d to add a bio.' : 'This writer hasn\u2019t added a bio yet.';
+      bioEl.style.display = 'block';
+      bioEl.style.opacity = '0.6';
+    }
+    if (isOwnProfile) {
+      document.getElementById('profilePageEditBioBtn').style.display = 'inline-flex';
+    }
+
+    // Follower count
+    const { count: followersCount } = await _supabase
+      .from('follows')
+      .select('id', { count: 'exact', head: true })
+      .eq('following_id', userId);
+    document.getElementById('profilePageFollowers').textContent = followersCount || 0;
+
+    // Update follow button state
+    if (!isOwnProfile) {
+      const isFollowing = followingSet.has(userId);
+      followBtn.textContent = isFollowing ? 'Following' : 'Follow';
+      followBtn.classList.toggle('following', isFollowing);
+    }
+
+    // Load posts
+    const { data: posts, error: postsErr } = await _supabase
+      .from('posts')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('is_draft', false)
+      .order('created_at', { ascending: false });
+
+    if (postsErr) throw postsErr;
+
+    const totalLikes = (posts || []).reduce((s, p) => s + (p.claps || 0), 0);
+    document.getElementById('profilePagePosts').textContent = posts?.length || 0;
+    document.getElementById('profilePageLikes').textContent = totalLikes;
+    document.getElementById('profilePagePostsMeta').textContent =
+      `${posts?.length || 0} post${posts?.length !== 1 ? 's' : ''} published`;
+
+    // Render post grid
+    grid.innerHTML = '';
+    if (!posts || !posts.length) {
+      grid.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">📝</div>
+          <div class="empty-state-title">No posts yet</div>
+          <div class="empty-state-sub">${isOwnProfile ? 'Start writing your first story!' : 'This writer hasn\'t published anything yet.'}</div>
+          ${isOwnProfile ? '<button class="btn btn-primary" onclick="switchView(\'editor\')">Write Your First Blog</button>' : ''}
+        </div>`;
+    } else {
+      posts.forEach(post => grid.appendChild(buildCard(post, 'feed')));
+    }
+
+    // Update URL hash without reload
+    const slug = username.toLowerCase().replace(/\s+/g, '-');
+    history.pushState(null, '', `#/u/${slug}`);
+
+  } catch (e) {
+    document.getElementById('profilePageName').textContent = 'Error loading profile';
+    console.error('Profile load error:', e);
+  }
+}
+
+function openAuthorProfileFromRead() {
+  if (currentReadPost?.user_id) {
+    openAuthorProfile(currentReadPost.user_id);
+  }
+}
+
+function closeAuthorProfile() {
+  // Clear URL hash
+  history.pushState(null, '', window.location.pathname + window.location.search);
+  switchView(prevView === 'profile' ? 'feed' : prevView);
+}
+
+async function toggleFollowFromProfile() {
+  const btn = document.getElementById('profilePageFollowBtn');
+  if (!currentProfileUserId || !btn) return;
+  if (guestMode || !currentUser) {
+    showGuestToast();
+    return;
+  }
+  await toggleFollow(currentProfileUserId, btn);
+  // Refresh follower count
+  try {
+    const { count } = await _supabase
+      .from('follows')
+      .select('id', { count: 'exact', head: true })
+      .eq('following_id', currentProfileUserId);
+    document.getElementById('profilePageFollowers').textContent = count || 0;
+  } catch (e) {}
+}
+
+function startEditBio() {
+  const bioEl = document.getElementById('profilePageBio');
+  const editEl = document.getElementById('profilePageBioEdit');
+  const editBtn = document.getElementById('profilePageEditBioBtn');
+  const input = document.getElementById('profilePageBioInput');
+  input.value = bioEl.textContent.includes('Edit bio') || bioEl.textContent.includes('hasn') ? '' : bioEl.textContent;
+  bioEl.style.display = 'none';
+  editBtn.style.display = 'none';
+  editEl.style.display = 'block';
+  input.focus();
+}
+
+async function saveProfileBio() {
+  if (!currentUser) return;
+  const bio = document.getElementById('profilePageBioInput').value.trim();
+  try {
+    const { error } = await _supabase
+      .from('profiles')
+      .upsert({ id: currentUser.id, bio }, { onConflict: 'id' });
+    if (error) throw error;
+    const bioEl = document.getElementById('profilePageBio');
+    bioEl.textContent = bio || 'Click \u201cEdit bio\u201d to add a bio.';
+    bioEl.style.opacity = bio ? '1' : '0.6';
+    bioEl.style.display = 'block';
+    document.getElementById('profilePageBioEdit').style.display = 'none';
+    document.getElementById('profilePageEditBioBtn').style.display = 'inline-flex';
+    showToast('✓', 'Bio saved!');
+  } catch (e) {
+    showToast('⚠️', 'Could not save bio. Make sure the bio column exists in your profiles table.');
+    cancelEditBio();
+  }
+}
+
+function cancelEditBio() {
+  document.getElementById('profilePageBio').style.display = 'block';
+  document.getElementById('profilePageBioEdit').style.display = 'none';
+  document.getElementById('profilePageEditBioBtn').style.display = 'inline-flex';
+}
+
+
 // ═══ INIT APP ═════════════════════════════════════════════════
 export function initApp() {
 
@@ -2853,6 +3111,7 @@ export function initApp() {
   });
 
   initVoiceTyping();
+  initQuillEditor();
 
   // Expose all functions to window so HTML onclick handlers can call them
   Object.assign(window, {
@@ -2884,6 +3143,9 @@ export function initApp() {
     createNotification, loadNotifications, markAllRead, toggleNotifPanel,
     computeBadges, renderBadges,
     toggleAnalyticsView, loadAnalytics,
-    sharePost, closeShareModal, copyShareLink, shareToTwitter, shareToWhatsApp
+    sharePost, closeShareModal, copyShareLink, shareToTwitter, shareToWhatsApp,
+    openAuthorProfile, openAuthorProfileFromRead, closeAuthorProfile,
+    toggleFollowFromProfile, startEditBio, saveProfileBio, cancelEditBio,
+    initQuillEditor
   });
 }
