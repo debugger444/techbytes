@@ -83,9 +83,13 @@ main{max-width:1100px;margin:2.5rem auto;padding:0 1.5rem;width:100%;}
 .btn-del:hover{background:rgba(252,92,125,.2);}
 /* LIKE ROW — only heart */
 .like-row{display:flex;align-items:center;gap:.6rem;padding:.55rem 1rem;border-top:1px solid var(--border);}
-.like-btn{background:none;border:1px solid var(--border);border-radius:100px;padding:.25rem .75rem;font-size:.82rem;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;color:var(--muted);display:flex;align-items:center;gap:.35rem;}
-.like-btn:hover{border-color:#fc5c7d;color:#fc5c7d;transform:scale(1.08);}
-.like-btn.liked{background:rgba(252,92,125,.12);border-color:#fc5c7d;color:#fc5c7d;}
+.like-btn{background:none;border:1px solid var(--border);border-radius:100px;padding:.25rem .75rem;font-size:.82rem;cursor:pointer;transition:all .3s cubic-bezier(.34,1.56,.64,1);font-family:'DM Sans',sans-serif;color:var(--muted);display:flex;align-items:center;gap:.35rem;}
+.like-btn:hover{border-color:#fc5c7d;color:var(--muted);transform:scale(1.08);}
+.like-btn:hover .like-heart{color:#fc5c7d;transform:scale(1.15);}
+.like-heart{transition:color .25s,transform .3s cubic-bezier(.34,1.56,.64,1);display:inline-flex;align-items:center;}
+.like-btn.liked{background:rgba(252,92,125,.13);border-color:rgba(252,92,125,.6);color:var(--muted);}
+.like-btn.liked .like-heart{color:#fc5c7d;}
+.like-btn.liked .like-num{color:#fc5c7d;font-weight:600;}
 .like-burst{position:fixed;pointer-events:none;z-index:9999;font-size:1.6rem;animation:burst .65s ease forwards;}
 /* VOICE TYPING */
 .voice-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.35rem .75rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:500;color:var(--muted);display:inline-flex;align-items:center;gap:.4rem;transition:all .25s;}
@@ -265,9 +269,13 @@ textarea.blog-body.warn{border-color:var(--gold);}
 [data-theme="light"] .read-content{color:#2a2a3e;}
 /* LIKE SECTION ON READ */
 .read-like-section{padding:1.5rem 2.5rem;border-top:1px solid var(--border);display:flex;align-items:center;gap:1rem;}
-.big-like-btn{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:.7rem 1.4rem;font-size:1.1rem;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;color:var(--text);display:flex;align-items:center;gap:.5rem;}
-.big-like-btn:hover{border-color:#fc5c7d;color:#fc5c7d;transform:scale(1.05);}
-.big-like-btn.liked{background:rgba(252,92,125,.12);border-color:#fc5c7d;color:#fc5c7d;}
+.big-like-btn{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:.7rem 1.4rem;font-size:1.1rem;cursor:pointer;transition:all .3s cubic-bezier(.34,1.56,.64,1);font-family:'DM Sans',sans-serif;color:var(--text);display:flex;align-items:center;gap:.5rem;}
+.big-like-btn:hover{border-color:#fc5c7d;transform:scale(1.05);}
+.big-like-btn:hover .like-heart{color:#fc5c7d;transform:scale(1.15);}
+.big-like-btn.liked{background:rgba(252,92,125,.13);border-color:rgba(252,92,125,.6);color:var(--text);}
+.big-like-btn.liked .like-heart{color:#fc5c7d;}
+.big-like-btn.liked .lc{color:#fc5c7d;font-weight:600;}
+.big-like-btn .like-heart{transition:color .25s,transform .3s cubic-bezier(.34,1.56,.64,1);display:inline-flex;align-items:center;}
 .big-like-btn .lc{font-size:.85rem;font-weight:600;}
 .like-msg{font-size:.82rem;color:var(--muted);}
 /* TOAST */

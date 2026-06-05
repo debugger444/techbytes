@@ -77,7 +77,7 @@ function toggleTheme() {
   document.getElementById('themeBtn').innerHTML = isDark
     ? SVG.sparkle.replace('width="1em" height="1em"', 'width="1.1em" height="1.1em"')
     : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1.1em" height="1.1em" style="display:inline-block;vertical-align:middle"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
-  localStorage.setItem('tb_theme', isDark ? 'light' : 'dark');
+  localStorage.setItem('tb_theme', isDark ? 'light' : 'dark'); 
 }
 
 
@@ -630,7 +630,7 @@ function buildCard(post, mode) {
     </div>
     <div class="like-row" style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
       <button class="like-btn ${isLiked ? 'liked' : ''}" onclick="quickLike('${post.id}',this)">
-        ${SVG.heart} <span class="like-num">${post.claps || 0}</span>
+        <span class="like-heart">${isLiked ? SVG.heartFill : SVG.heart}</span> <span class="like-num">${post.claps || 0}</span>
       </button>
       <button class="bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" data-id="${post.id}" onclick="toggleBookmark('${post.id}',this)" title="Bookmark post">
         ${SVG.bookmark}
@@ -655,9 +655,13 @@ async function quickLike(postId, btn) {
   if (wasLiked) {
     likedPosts.delete(postId);
     btn.classList.remove('liked');
+    const heartEl = btn.querySelector('.like-heart');
+    if (heartEl) heartEl.innerHTML = SVG.heart;
   } else {
     likedPosts.add(postId);
     btn.classList.add('liked');
+    const heartEl = btn.querySelector('.like-heart');
+    if (heartEl) heartEl.innerHTML = SVG.heartFill;
   }
 
   try {
@@ -783,6 +787,8 @@ function openRead(post) {
   const liked = likedPosts.has(post.id);
   const bigBtn = document.getElementById('bigLikeBtn');
   bigBtn.className = 'big-like-btn' + (liked ? ' liked' : '');
+  const bigHeartEl = bigBtn.querySelector('.like-heart');
+  if (bigHeartEl) bigHeartEl.innerHTML = liked ? SVG.heartFill : SVG.heart;
   document.getElementById('bigLikeCount').textContent = post.claps || 0;
   document.getElementById('likeMsg').textContent = liked ? 'You liked this!' : 'Like this post!';
 
@@ -817,13 +823,16 @@ async function handleReadLike() {
   burstEffect(btn, SVG.heartFill);
 
   const wasLiked = likedPosts.has(currentReadPost.id);
+  const heartEl = btn.querySelector('.like-heart');
   if (wasLiked) {
     likedPosts.delete(currentReadPost.id);
     btn.classList.remove('liked');
+    if (heartEl) heartEl.innerHTML = SVG.heart;
     document.getElementById('likeMsg').textContent = 'Like this post!';
   } else {
     likedPosts.add(currentReadPost.id);
     btn.classList.add('liked');
+    if (heartEl) heartEl.innerHTML = SVG.heartFill;
     document.getElementById('likeMsg').innerHTML = SVG.heartFill + ' Thanks for the like!';
   }
 
