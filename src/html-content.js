@@ -27,7 +27,7 @@ export const bodyHTML = `
   <div id="readProgressBar" class="read-progress-bar" style="position:absolute;bottom:0;left:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;z-index:101;transition:width 0.1s ease;display:none;"></div>
   <div class="logo" onclick="switchView('feed');closeMobileNav();">Tech<span>Bytes</span></div>
   <div class="nav-tabs" id="navTabs">
-    <button class="nav-tab active" id="navFeed" onclick="switchView('feed')">Feed</button>
+    <button class="nav-tab active" id="navFeed" onclick="switchView('feed')">Home</button>
     <button class="nav-tab" id="navWrite" onclick="switchView('editor')">Write</button>
     <button class="nav-tab" id="navMyBlogs" onclick="switchView('myblogs')">My Blogs</button>
     <button class="nav-tab" id="navBookmarks" onclick="switchView('bookmarks')">Bookmarks</button>
@@ -64,7 +64,7 @@ export const bodyHTML = `
 
 <!-- MOBILE NAV OVERLAY -->
 <nav class="mobile-nav" id="mobileNav">
-  <button class="nav-tab active" id="mNavFeed" onclick="switchView('feed');closeMobileNav()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em"><path d="M3 9.75L12 3l9 6.75V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9.75z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Feed</button>
+  <button class="nav-tab active" id="mNavFeed" onclick="switchView('feed');closeMobileNav()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em"><path d="M3 9.75L12 3l9 6.75V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9.75z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Home</button>
   <button class="nav-tab" id="mNavWrite" onclick="switchView('editor');closeMobileNav()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg> Write</button>
   <button class="nav-tab" id="mNavMyBlogs" onclick="switchView('myblogs');closeMobileNav()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> My Blogs</button>
   <button class="nav-tab" id="mNavBookmarks" onclick="switchView('bookmarks');closeMobileNav()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg> Bookmarks</button>

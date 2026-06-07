@@ -2326,8 +2326,8 @@ async function loadBookmarksView() {
         <div class="empty-state">
           <div class="empty-state-icon">${SVG.bookmark}</div>
           <div class="empty-state-title">No bookmarks saved</div>
-          <div class="empty-state-sub">Browse the feed and save articles for later reading!</div>
-          <button class="btn btn-primary" onclick="switchView('feed')">Explore Feed</button>
+          <div class="empty-state-sub">Browse Home and save articles for later reading!</div>
+          <button class="btn btn-primary" onclick="switchView('feed')">Go to Home</button>
         </div>`;
       return;
     }
