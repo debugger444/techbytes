@@ -60,6 +60,7 @@ let allFeedPosts = [],
 let followingSet = new Set(),
     likedPosts = new Set(),
     bookmarkedPosts = new Set(),
+    interactedPosts = new Set(),   // posts the current user has read or liked
     showAnalyticsActive = false;
 
 let userAvatarUrl = null; // base64 avatar stored in localStorage
@@ -502,13 +503,23 @@ function renderFeedGrid() {
     return;
   }
 
-  // Sort: followed users first, then by likes (most → least) within each group
-  const followedPosts = posts.filter(p => followingSet.has(p.user_id));
-  const otherPosts = posts.filter(p => !followingSet.has(p.user_id));
-  followedPosts.sort((a, b) => (b.claps || 0) - (a.claps || 0));
-  otherPosts.sort((a, b) => (b.claps || 0) - (a.claps || 0));
-  const sorted = [...followedPosts, ...otherPosts];
+  // Separate interacted (read/liked) posts — they always sink to the bottom
+  const freshPosts    = posts.filter(p => !interactedPosts.has(p.id));
+  const seenPosts     = posts.filter(p =>  interactedPosts.has(p.id));
 
+  // Within fresh posts: followed authors first, then others — each sorted by likes desc
+  const followedFresh = freshPosts.filter(p =>  followingSet.has(p.user_id));
+  const otherFresh    = freshPosts.filter(p => !followingSet.has(p.user_id));
+  followedFresh.sort((a, b) => (b.claps || 0) - (a.claps || 0));
+  otherFresh.sort((a, b)    => (b.claps || 0) - (a.claps || 0));
+
+  // Seen posts: same sub-sort (followed → others, by likes) but all at the bottom
+  const followedSeen  = seenPosts.filter(p =>  followingSet.has(p.user_id));
+  const otherSeen     = seenPosts.filter(p => !followingSet.has(p.user_id));
+  followedSeen.sort((a, b) => (b.claps || 0) - (a.claps || 0));
+  otherSeen.sort((a, b)    => (b.claps || 0) - (a.claps || 0));
+
+  const sorted = [...followedFresh, ...otherFresh, ...followedSeen, ...otherSeen];
   sorted.forEach(post => grid.appendChild(buildCard(post, 'feed')));
 }
 
@@ -662,6 +673,8 @@ async function quickLike(postId, btn) {
     btn.classList.add('liked');
     const heartEl = btn.querySelector('.like-heart');
     if (heartEl) heartEl.innerHTML = SVG.heartFill;
+    // Mark this post as interacted — it will sink to the bottom on next render
+    markInteracted(postId);
   }
 
   try {
@@ -738,6 +751,8 @@ function openRead(post) {
   currentReadPost = post;
   prevView = currentView;
   switchView('read');
+  // Mark as interacted — this post sinks to the bottom of the feed grid
+  markInteracted(post.id);
 
   const cover = document.getElementById('readCover');
   if (post.image_url) {
@@ -834,6 +849,8 @@ async function handleReadLike() {
     btn.classList.add('liked');
     if (heartEl) heartEl.innerHTML = SVG.heartFill;
     document.getElementById('likeMsg').innerHTML = SVG.heartFill + ' Thanks for the like!';
+    // Mark as interacted — post sinks to the bottom on return to feed
+    markInteracted(currentReadPost.id);
   }
 
   try {
@@ -1185,6 +1202,9 @@ function showApp(user) {
   document.getElementById('navTabs').classList.add('show');
   const mso = document.getElementById('mNavSignOut');
   if (mso) mso.style.display = 'block';
+
+  // Load interacted posts from localStorage for this user
+  loadInteractedPosts();
 
   // Load Bookmarks and Notifications
   loadBookmarks();
@@ -2223,6 +2243,31 @@ async function incrementView(postId) {
       console.warn('Could not increment view count:', e);
     }
   }
+}
+
+
+// ═══ INTERACTED POSTS (read / liked → sink to bottom) ════════
+function _interactedKey() {
+  return 'tb_interacted_' + (currentUser?.id || 'guest');
+}
+
+function loadInteractedPosts() {
+  interactedPosts.clear();
+  try {
+    const stored = localStorage.getItem(_interactedKey());
+    if (stored) {
+      JSON.parse(stored).forEach(id => interactedPosts.add(id));
+    }
+  } catch (e) {}
+}
+
+function markInteracted(postId) {
+  if (!postId) return;
+  if (interactedPosts.has(postId)) return; // already marked, no-op
+  interactedPosts.add(postId);
+  try {
+    localStorage.setItem(_interactedKey(), JSON.stringify([...interactedPosts]));
+  } catch (e) {}
 }
 
 
