@@ -504,20 +504,18 @@ function renderFeedGrid() {
   }
 
   // Separate interacted (read/liked) posts — they always sink to the bottom
-  const freshPosts    = posts.filter(p => !interactedPosts.has(p.id));
-  const seenPosts     = posts.filter(p =>  interactedPosts.has(p.id));
+  const freshPosts = posts.filter(p => !interactedPosts.has(p.id));
+  const seenPosts  = posts.filter(p =>  interactedPosts.has(p.id));
 
-  // Within fresh posts: followed authors first, then others — each sorted by likes desc
-  const followedFresh = freshPosts.filter(p =>  followingSet.has(p.user_id));
-  const otherFresh    = freshPosts.filter(p => !followingSet.has(p.user_id));
-  followedFresh.sort((a, b) => (b.claps || 0) - (a.claps || 0));
-  otherFresh.sort((a, b)    => (b.claps || 0) - (a.claps || 0));
+  // Within fresh posts: followed authors first, then others
+  // Each group sorted newest-first (latest post = top-left)
+  const newestFirst = (a, b) => new Date(b.created_at) - new Date(a.created_at);
+  const followedFresh = freshPosts.filter(p =>  followingSet.has(p.user_id)).sort(newestFirst);
+  const otherFresh    = freshPosts.filter(p => !followingSet.has(p.user_id)).sort(newestFirst);
 
-  // Seen posts: same sub-sort (followed → others, by likes) but all at the bottom
-  const followedSeen  = seenPosts.filter(p =>  followingSet.has(p.user_id));
-  const otherSeen     = seenPosts.filter(p => !followingSet.has(p.user_id));
-  followedSeen.sort((a, b) => (b.claps || 0) - (a.claps || 0));
-  otherSeen.sort((a, b)    => (b.claps || 0) - (a.claps || 0));
+  // Liked/read posts sink to the bottom — also newest-first within that group
+  const followedSeen  = seenPosts.filter(p =>  followingSet.has(p.user_id)).sort(newestFirst);
+  const otherSeen     = seenPosts.filter(p => !followingSet.has(p.user_id)).sort(newestFirst);
 
   const sorted = [...followedFresh, ...otherFresh, ...followedSeen, ...otherSeen];
   sorted.forEach(post => grid.appendChild(buildCard(post, 'feed')));
@@ -663,20 +661,26 @@ async function quickLike(postId, btn) {
   burstEffect(btn, SVG.heartFill);
   const wasLiked = likedPosts.has(postId);
 
+  // ── Optimistic UI update (instant feedback) ──────────────────
+  const heartEl = btn.querySelector('.like-heart');
+  const numEl   = btn.querySelector('.like-num');
+  const curDisplayed = parseInt(numEl?.textContent || '0', 10);
+
   if (wasLiked) {
     likedPosts.delete(postId);
     btn.classList.remove('liked');
-    const heartEl = btn.querySelector('.like-heart');
     if (heartEl) heartEl.innerHTML = SVG.heart;
+    if (numEl)   numEl.textContent = Math.max(0, curDisplayed - 1);
   } else {
     likedPosts.add(postId);
     btn.classList.add('liked');
-    const heartEl = btn.querySelector('.like-heart');
     if (heartEl) heartEl.innerHTML = SVG.heartFill;
-    // Mark this post as interacted — it will sink to the bottom on next render
+    if (numEl)   numEl.textContent = curDisplayed + 1;
+    // Mark as interacted — post sinks to the bottom on next render
     markInteracted(postId);
   }
 
+  // ── Sync with DB (correct the real count) ───────────────────
   try {
     const { data } = await _supabase
       .from('posts')
@@ -684,22 +688,36 @@ async function quickLike(postId, btn) {
       .eq('id', postId)
       .single();
 
-    const cur = data?.claps || 0;
+    const cur    = data?.claps ?? curDisplayed;
     const newVal = wasLiked ? Math.max(0, cur - 1) : cur + 1;
 
     await _supabase.from('posts').update({ claps: newVal }).eq('id', postId);
 
-    const numEl = btn.querySelector('.like-num');
+    // Correct displayed count with authoritative server value
     if (numEl) numEl.textContent = newVal;
 
+    // Keep allFeedPosts in sync so re-renders show the right count
     const idx = allFeedPosts.findIndex(p => p.id === postId);
     if (idx > -1) allFeedPosts[idx].claps = newVal;
 
-    // Trigger Notification
+    // Trigger notification to post author
     if (!wasLiked && data && data.user_id !== currentUser.id) {
       await createNotification(data.user_id, 'like', postId, data.title);
     }
-  } catch (e) {}
+  } catch (e) {
+    // On error: revert the optimistic update
+    if (wasLiked) {
+      likedPosts.add(postId);
+      btn.classList.add('liked');
+      if (heartEl) heartEl.innerHTML = SVG.heartFill;
+      if (numEl)   numEl.textContent = curDisplayed;
+    } else {
+      likedPosts.delete(postId);
+      btn.classList.remove('liked');
+      if (heartEl) heartEl.innerHTML = SVG.heart;
+      if (numEl)   numEl.textContent = Math.max(0, curDisplayed);
+    }
+  }
 }
 
 function burstEffect(el, emoji) {
