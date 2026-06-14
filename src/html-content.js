@@ -159,7 +159,7 @@ export const bodyHTML = `
         <div class="field-group">
           <div class="field-label">Blog Title</div>
           <input type="text" id="titleInput" placeholder="Give your story a title…" maxlength="120" oninput="onTitleChange()">
-          <div class="slug-row"><span class="slug-prefix">techbytes.com/blog/</span><span class="slug-value" id="slugDisplay">your-blog-title</span></div>
+
         </div>
         <div class="field-group">
           <div class="field-label">Category</div>
@@ -278,7 +278,7 @@ export const bodyHTML = `
           <img id="previewImage" class="preview-image" src="" alt="" style="display:none;">
           <h2 class="preview-title" id="previewTitle">Untitled Blog</h2>
           <p class="preview-caption" id="previewCaption"></p>
-          <div class="preview-slug-line" id="previewSlug"></div>
+
           <p class="preview-text" id="previewText"></p>
         </div>
       </div>
@@ -360,7 +360,7 @@ export const bodyHTML = `
             <span class="read-author-meta" id="readAuthorMeta"></span>
           </div>
         </div>
-        <div class="read-slug-line" id="readSlug"></div>
+
         <p class="read-caption" id="readCaption" style="display:none;"></p>
         <div class="read-divider"></div>
         <div class="read-content ql-display" id="readContent"></div>

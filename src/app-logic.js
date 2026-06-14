@@ -94,8 +94,6 @@ function generateSlug(t) {
 }
 
 function onTitleChange() {
-  document.getElementById('slugDisplay').textContent =
-    generateSlug(document.getElementById('titleInput').value) || 'your-blog-title';
   scheduleAutoSave();
 }
 
@@ -803,8 +801,6 @@ function openRead(post) {
       year: 'numeric', month: 'long', day: 'numeric'
     }) + ' · ' + calcReadTime(post.body) + ' · ' + SVG.eye + ' ' + viewsCount + ' views';
 
-  document.getElementById('readSlug').innerHTML =
-    SVG.link + ' techbytes.com/blog/' + (post.slug || generateSlug(post.title || ''));
 
   const cap = document.getElementById('readCaption');
   if (post.caption) {
@@ -1898,7 +1894,7 @@ function showPreview() {
     year: 'numeric', month: 'long', day: 'numeric'
   });
   document.getElementById('previewReadTime').innerHTML = SVG.clock + ' ' + calcReadTime(body);
-  document.getElementById('previewSlug').innerHTML = SVG.link + ' techbytes.com/blog/' + generateSlug(title);
+
 
   const previewImg = document.getElementById('previewImage');
   let imgSrc = null;
@@ -1931,7 +1927,6 @@ function resetForm() {
     window._quill.setContents([]);
   }
 
-  document.getElementById('slugDisplay').textContent = 'your-blog-title';
   document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
   document.getElementById('captionChips').innerHTML = '';
   document.getElementById('loadingState').style.display = 'none';
