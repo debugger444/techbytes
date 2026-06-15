@@ -1350,6 +1350,21 @@ function toggleCat(el) {
   el.classList.add('active');
 }
 
+function handleImageZoneClick(e) {
+  const zone = document.getElementById('imageZone');
+  // If already has image, do nothing (remove button handles it)
+  if (zone.classList.contains('has-image')) return;
+  // If compact and not yet expanded, expand it first
+  if (!zone.classList.contains('expanded')) {
+    zone.classList.add('expanded');
+    const textEl = zone.querySelector('.image-zone-text-sm');
+    if (textEl) textEl.textContent = 'Click to browse or drag & drop';
+    return;
+  }
+  // Already expanded — open file picker
+  document.getElementById('fileInput').click();
+}
+
 function handleImageUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -1361,7 +1376,9 @@ function handleImageUpload(event) {
   img.src = uploadedImageData;
   img.style.display = 'block';
   document.getElementById('imagePlaceholder').style.display = 'none';
-  document.getElementById('imageZone').classList.add('has-image');
+  const zone = document.getElementById('imageZone');
+  zone.classList.add('has-image');
+  zone.classList.remove('expanded');
   document.getElementById('imageActions').style.display = 'flex';
   useAIImage = false;
   document.getElementById('aiImgToggle').classList.add('active');
@@ -1395,8 +1412,12 @@ function removeImage() {
   const img = document.getElementById('uploadedImg');
   img.src = '';
   img.style.display = 'none';
-  document.getElementById('imagePlaceholder').style.display = 'block';
-  document.getElementById('imageZone').classList.remove('has-image');
+  document.getElementById('imagePlaceholder').style.display = '';
+  const zone = document.getElementById('imageZone');
+  zone.classList.remove('has-image');
+  zone.classList.remove('expanded');
+  const textEl = zone.querySelector('.image-zone-text-sm');
+  if (textEl) textEl.textContent = 'Upload cover';
   document.getElementById('imageActions').style.display = 'none';
   document.getElementById('fileInput').value = '';
 }

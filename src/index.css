@@ -188,6 +188,23 @@ textarea.blog-body.warn{border-color:var(--gold);}
 .image-zone-icon{font-size:2.5rem;margin-bottom:.75rem;}
 .image-zone-text{color:var(--muted);font-size:.9rem;line-height:1.5;}
 .image-zone-text strong{color:var(--text);display:block;margin-bottom:.25rem;}
+/* Compact image zone */
+.image-zone-compact{padding:.55rem .85rem;display:flex;align-items:center;gap:.5rem;border-radius:10px;height:42px;justify-content:center;}
+.image-zone-compact.expanded{height:auto;padding:1.25rem;flex-direction:column;gap:.4rem;border-radius:14px;}
+.image-zone-compact.has-image{height:auto;padding:0;border-style:solid;border-color:var(--accent);}
+.image-zone-compact .image-zone-inner{display:flex;align-items:center;gap:.5rem;pointer-events:none;}
+.image-zone-compact.expanded .image-zone-inner{flex-direction:column;gap:.4rem;}
+.image-zone-compact.has-image .image-zone-inner{display:none;}
+.image-zone-icon-sm{display:flex;align-items:center;color:var(--muted);flex-shrink:0;}
+.image-zone-text-sm{color:var(--muted);font-size:.8rem;white-space:nowrap;}
+.image-zone-compact.expanded .image-zone-text-sm{font-size:.85rem;text-align:center;white-space:normal;}
+.image-zone-compact img{width:100%;max-height:160px;object-fit:cover;border-radius:10px;}
+/* Side-by-side cover + caption */
+.cover-caption-row{display:grid;grid-template-columns:auto 1fr;gap:1rem;align-items:start;margin-bottom:1.5rem;}
+.cover-field-group{margin-bottom:0;min-width:0;}
+.caption-field-group{margin-bottom:0;min-width:0;}
+.caption-field-group input{height:42px;}
+@media(max-width:600px){.cover-caption-row{grid-template-columns:1fr;}.caption-field-group input{height:auto;}}
 #fileInput{display:none;}
 .image-actions{display:flex;gap:.75rem;margin-top:.75rem;}
 .image-actions button{flex:1;padding:.6rem;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;font-size:.85rem;font-weight:500;transition:all .2s;}
@@ -337,7 +354,7 @@ kbd{background:var(--surface2);border:1px solid var(--border);border-radius:4px;
   .read-caption{font-size:.9rem;}
   .read-content{font-size:.95rem;}
   .editor-card{padding:.9rem;border-radius:14px;}
-  .image-zone{padding:1.5rem 1rem;}
+  .image-zone:not(.image-zone-compact){padding:1.5rem 1rem;}
   .ai-panel{padding:1rem;}
   .actions-bar{flex-wrap:wrap;}
   .actions-bar .btn-gold{flex:1 1 100%;}
