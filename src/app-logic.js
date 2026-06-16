@@ -143,15 +143,27 @@ function handleAvatarUpload(event) {
   event.target.value = '';
 }
 
+function removeAvatar() {
+  if (!currentUser) return;
+  userAvatarUrl = null;
+  localStorage.removeItem('tb_avatar_' + currentUser.id);
+  updateAllAvatarDisplays();
+  showToast(SVG.check, 'Profile picture removed.');
+}
+
 function updateAllAvatarDisplays() {
   const el = document.getElementById('profileAvatarEl');
   if (el) {
     if (userAvatarUrl) {
-      el.innerHTML = `<img src="${userAvatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+      el.innerHTML = `<img src="${userAvatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;      
     } else {
+      el.innerHTML = '';
       el.textContent = getInitial(currentUser?.email || '?');
     }
   }
+  // Show/hide remove button
+  const removeBtn = document.getElementById('avatarRemoveBtn');
+  if (removeBtn) removeBtn.style.display = userAvatarUrl ? 'inline-flex' : 'none';
 }
 
 function loadUserAvatar() {
