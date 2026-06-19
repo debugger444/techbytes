@@ -144,7 +144,14 @@ function handleAvatarUpload(event) {
 }
 
 function removeAvatar() {
-  if (!currentUser) return;
+  if (!currentUser) {
+    showToast(SVG.warning, 'Please sign in to manage your profile picture.');
+    return;
+  }
+  if (!userAvatarUrl) {
+    showToast(SVG.warning, 'No profile picture to remove.');
+    return;
+  }
   userAvatarUrl = null;
   localStorage.removeItem('tb_avatar_' + currentUser.id);
   updateAllAvatarDisplays();
@@ -3271,7 +3278,7 @@ export function initApp() {
   // Expose all functions to window so HTML onclick handlers can call them
   Object.assign(window, {
     toggleTheme, generateSlug, onTitleChange, calcReadTime, getInitial,
-    avatarColor, displayName, getDisplayName, handleAvatarUpload, updateAllAvatarDisplays,
+    avatarColor, displayName, getDisplayName, handleAvatarUpload, removeAvatar, updateAllAvatarDisplays,
     loadUserAvatar, getAvatarImgTag, switchView, readGoBack, countWords,
     updateWordGoal, scheduleAutoSave, triggerAutoSave, loadFeed, renderFeedGrid,
     setFilter, filterPosts, loadMyBlogs, buildCard, quickLike, burstEffect,
